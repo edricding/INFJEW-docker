@@ -4,8 +4,8 @@
   function handleLogin() {
     var usernameEl = document.getElementById("login-username");
     var passwordEl = document.getElementById("login-password");
-    var username = (usernameEl.value || "").trim();
-    var password = (passwordEl.value || "").trim();
+    var username = (usernameEl && usernameEl.value ? usernameEl.value : "").trim();
+    var password = (passwordEl && passwordEl.value ? passwordEl.value : "").trim();
 
     if (!username || !password) {
       return;
@@ -24,11 +24,11 @@
       })
       .then(function (data) {
         if (data && data.success) {
-          window.location.href = "https:
+          window.location.href = "https://dashboard.infjew.com";
           return;
         }
-        usernameEl.value = "";
-        passwordEl.value = "";
+        if (usernameEl) usernameEl.value = "";
+        if (passwordEl) passwordEl.value = "";
       })
       .catch(function () {});
   }
@@ -73,4 +73,3 @@
     });
   }
 })();
-

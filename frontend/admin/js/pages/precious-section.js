@@ -1,8 +1,9 @@
 window.bannerList = [];
 window.countingDown = [];
 
+
 window.addEventListener("DOMContentLoaded", function () {
-  fetch("/api/banners", {
+  fetch("https:
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -12,16 +13,19 @@ window.addEventListener("DOMContentLoaded", function () {
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
+        console.log("Banner ", data.data);
         bannerList = data.data;
         renderBannerTable(bannerList);
         toggleAddBannerButton(bannerList);
       } else {
+        console.log(" Banner :", data.message);
       }
     })
     .catch((error) => {
+      console.error(":", error);
     });
 
-  fetch("/api/countingdown", {
+  fetch("https:
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -31,18 +35,24 @@ window.addEventListener("DOMContentLoaded", function () {
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
+        console.log("CountingDown ", data.data);
         countingDown = data.data[0];
         renderCountingDownTable(countingDown);
       } else {
+        console.log(" CountingDown :", data.message);
       }
     })
     .catch((error) => {
+      console.error(":", error);
     });
 
+
   document.addEventListener("click", function (e) {
+
     if (e.target.closest(".banner-delete-trash")) {
       const target = e.target.closest(".banner-delete-trash");
       const bannerId = target.getAttribute("data-banner-id");
+
 
       const idContainer = document.getElementById("delete-banner-id");
       if (idContainer) {
@@ -57,13 +67,14 @@ window.addEventListener("DOMContentLoaded", function () {
       const id = parseInt(
         document.getElementById("delete-banner-id").innerHTML.trim()
       );
+
       deleteBanner(id);
     });
 
   document.addEventListener("click", function (e) {
     const target = e.target;
     if (target && target.id === "add-banner-btn") {
-      fetch("/api/banner/create", {
+      fetch("https:
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -73,17 +84,21 @@ window.addEventListener("DOMContentLoaded", function () {
         .then((res) => res.json())
         .then((data) => {
           if (data.success) {
+            console.log(" Banner ");
             renderBannerTable(data.data);
             toggleAddBannerButton(data.data);
+
 
             const modal = bootstrap.Modal.getInstance(
               document.getElementById("AddBannerModal")
             );
             if (modal) modal.hide();
           } else {
+            console.error(" : ", data.message);
           }
         })
         .catch((err) => {
+          console.error(" : ", err);
         });
     }
   });
@@ -133,14 +148,40 @@ function getCountingDownPreciousForm() {
       .value.trim(),
   };
 
+  console.log("", editCountingDownPreciousData);
   return editCountingDownPreciousData;
 }
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function renderCountingDownTable(data) {
   const tbody = document.getElementById("index-counting-down-tbody");
+
 
   tbody.innerHTML = "";
 
@@ -188,6 +229,7 @@ function renderCountingDownTable(data) {
 
   tbody.appendChild(row);
 
+
   const tooltipTriggerList = [].slice.call(
     document.querySelectorAll('[data-bs-toggle="tooltip"]')
   );
@@ -206,7 +248,7 @@ function renderCountingDownTable(data) {
     if (target && target.id === "save-countingdown-precious-btn") {
       const updatedData = getCountingDownPreciousForm();
 
-      fetch("/api/countingdown/update", {
+      fetch("https:
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -217,8 +259,10 @@ function renderCountingDownTable(data) {
         .then((response) => response.json())
         .then((res) => {
           if (res.success) {
+            console.log(" ");
 
-            fetch("/api/countingdown", {
+
+            fetch("https:
               method: "GET",
               headers: {
                 "Content-Type": "application/json",
@@ -231,23 +275,28 @@ function renderCountingDownTable(data) {
                   countingDown = data.data[0];
                   renderCountingDownTable(countingDown);
 
+
                   const modal = bootstrap.Modal.getInstance(
                     document.getElementById("EditCountingDownModal")
                   );
                   if (modal) modal.hide();
                 } else {
+                  console.error(" :", data.message);
                 }
               });
           } else {
+            console.error(" :", res.message);
           }
         })
         .catch((err) => {
+          console.error(" :", err);
         });
     }
   });
 }
 
 function fillCountingDownModal(data) {
+
   document.getElementById("edit-countingdown-title").value = data.title || "";
   document.getElementById("edit-countingdown-price").value = data.price || "";
   document.getElementById("edit-countingdown-discount").value =
@@ -263,6 +312,7 @@ function fillCountingDownModal(data) {
 
 function renderBannerTable(data) {
   const tableBody = document.getElementById("index-banner-list-tbody");
+
 
   tableBody.innerHTML = "";
 
@@ -308,6 +358,7 @@ function renderBannerTable(data) {
     tableBody.appendChild(row);
   });
 
+
   const tooltipTriggerList = [].slice.call(
     document.querySelectorAll('[data-bs-toggle="tooltip"]')
   );
@@ -330,7 +381,7 @@ function toggleAddBannerButton(data) {
 }
 
 function deleteBanner(bannerId) {
-  fetch("/api/banner/delete", {
+  fetch("https:
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
@@ -342,12 +393,16 @@ function deleteBanner(bannerId) {
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
+        console.log("Banner ");
+
         renderBannerTable(data.data);
         toggleAddBannerButton(data.data);
       } else {
+        console.log("Banner :", data.message);
       }
     })
     .catch((error) => {
+      console.error(":", error);
     });
 }
 

@@ -78,14 +78,14 @@ function clearPreciousForm() {
 }
 
 function fetchAndRenderPreciousList() {
-  return fetch("/api/preciouslist", {
+  return fetch("https:
     method: "GET",
     credentials: "include",
   })
     .then((res) => res.json())
     .then((data) => {
       if (!data.success) {
-        console.error("éºæä¼?éî¥ä»ºçºîç³é±î¥ä¼å§æ»æª±éãå°æ¥¹æ´ã¼é¼åç¶?, data.message);
+        console.error(" ", data.message);
         return;
       }
 
@@ -296,7 +296,7 @@ function addEventListenerAfterDOMLoaded() {
         const id = parseInt(editBtn.getAttribute("data-id"), 10);
         const result = preciousListData.find((row) => row[0] === id);
 
-        console.log("é¾èç¶é±å´å°é´î¿ä¼è¹æ¬ä»¸é±ï½å¯é±î¼ç°®é¾åä» æ¥£æç³é±ï¼î©é¼åç¶é±ï¹ç¹é±ï½åå§æ¹ä»®éºå® å¹é±ç¯ä»¦éî¦æ®é±ï¹ç¹é±åå¹è¹æ¬ä»¹æ´æ¯å¯è¤°æ¡ä¼", result, preciousListData);
+        console.log("", result, preciousListData);
 
         fillEditForm(result);
       }
@@ -359,7 +359,7 @@ function addEventListenerAfterDOMLoaded() {
 
     Swal.fire({
       title: "Are you sure?",
-      text: "The data will be deletedé¼åç¶?,
+      text: "The data will be deleted",
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Delete",
@@ -371,7 +371,7 @@ function addEventListenerAfterDOMLoaded() {
       buttonsStyling: false,
     }).then((result) => {
       if (result.isConfirmed) {
-        fetch("/api/preciouslist/delete", {
+        fetch("https:
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -383,17 +383,17 @@ function addEventListenerAfterDOMLoaded() {
               location.reload();
             } else {
               Swal.fire({
-                title: "éºæä¼?å§æ¹ä»®é±åå¯é±å æª±å§æ»æª±éãå°æ¥¹æ´ã¼",
-                text: data.message || "è¹æ¬ä¼é±Ñç³é±ãæ®å§æ¹ä¼ç»¡æ¶å°æ¤¹ç£ä¼å§æ¹ä¼é±æå¯é±æä¼éî¤å?,
+                title: " ",
+                text: data.message || "",
                 icon: "error",
               });
             }
           })
           .catch((err) => {
-            console.error("éºæä¼?å§æ¹ä»®é±åå¯é±å æª±å§æ³ç¶é±æ»ç³ç§åç¥©é¼åç¶?, err);
+            console.error(" ", err);
             Swal.fire({
-              title: "é¾ä»æª°é±î¡å¹ç»å®ä¼é¼å°ä¼é±åå°éå¤å",
-              text: "å§æ¹ä»®é±åå¯é±å æª±å§æ»æª±éãå°æ¥¹æ´ã¼é¼åç¶é±ï¸¾å°éå¤ç¾è¹æ¬å«é±æ¬ç¹é±å¼ã¼é¾ä»æª°é±î¡å¹ç»å®ä¼éî¦âé±è¯²ç¹é±?,
+              title: "",
+              text: "",
               icon: "error",
             });
           });
@@ -420,7 +420,7 @@ function formatPreciousListData(data) {
 
 function AddPreciousList(e) {
 
-  fetch("/api/preciouslist/create", {
+  fetch("https:
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -430,19 +430,19 @@ function AddPreciousList(e) {
     .then((response) => response.json())
     .then((result) => {
       if (result.success) {
-        console.log("è¹æ¬ä¼éºè«ç³é¨å®ä¼è¹æ¬ä»®é±îç³é±ãä¼¡", result);
+        console.log("", result);
         location.reload();
       } else {
-        console.error("è¹æ¬ä¼éºè«ç³é¨å®ä¼å§æ»æª±éãå°æ¥¹æ´ã¼", result.message);
+        console.error("", result.message);
       }
     })
     .catch((error) => {
-      console.error("éî¤åçºîç¹éãä» å§æ»æª±éãå°æ¥¹æ´ã¼", error);
+      console.error("", error);
     });
 }
 
 function UpdatePreciousList(e) {
-  fetch(`/api/preciouslist/update`, {
+  fetch(`https:
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -452,14 +452,14 @@ function UpdatePreciousList(e) {
     .then((response) => response.json())
     .then((result) => {
       if (result.success) {
-        console.log("è¹æ¬ä¼æ¥¹æ³ç¹é±è«å¹è¹æ¬ä»®é±îç³é±ãä¼¡", result);
+        console.log("", result);
         location.reload();
       } else {
-        console.error("è¹æ¬ä¼æ¥¹æ³ç¹é±è«å¹å§æ»æª±éãå°æ¥¹æ´ã¼", result.message);
+        console.error("", result.message);
       }
     })
     .catch((error) => {
-      console.error("éî¤åçºîç¹éãä» å§æ»æª±éãå°æ¥¹æ´ã¼", error);
+      console.error("", error);
     });
 }
 
