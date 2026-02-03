@@ -913,5 +913,23 @@
     <script src="https://storage.googleapis.com/bucket-infjew/INFJEW/backend/js/pages/precious-list.js"></script>
 
     <script src="https://storage.googleapis.com/bucket-infjew/INFJEW/backend/js/BackendHttpRequest.js"></script>
-  </body>
+      <script>
+      (function () {
+        var logoutBtn = document.getElementById("logout-btn");
+        if (!logoutBtn) {
+          return;
+        }
+        logoutBtn.addEventListener("click", function (e) {
+          e.preventDefault();
+          fetch("/api/AuthLogout", {
+            method: "POST",
+            credentials: "include",
+          })
+            .finally(function () {
+              window.location.href = "/login";
+            });
+        });
+      })();
+    </script>
+</body>
 </html>
