@@ -1,12 +1,13 @@
 package session
 
 import (
-	"github.com/gorilla/sessions"
-	"net/http"
 	"encoding/json"
+	"net/http"
+
+	"github.com/gorilla/sessions"
 )
 
-var Store = sessions.NewCookieStore([]byte("infinityjewelry")) // 強烈建議改成更複雜的密鑰
+var Store = sessions.NewCookieStore([]byte("infinityjewelry")) // TODO: replace with stronger secret
 
 func InitSession(w http.ResponseWriter, r *http.Request, username string) error {
 	session, _ := Store.Get(r, "session-id")
@@ -15,8 +16,8 @@ func InitSession(w http.ResponseWriter, r *http.Request, username string) error 
 		Path:     "/",
 		MaxAge:   3600,
 		HttpOnly: true,
-		Secure:   true, // 必须开启
-		SameSite: http.SameSiteNoneMode, // 必须开启
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
 	}
 	return session.Save(r, w)
 }
