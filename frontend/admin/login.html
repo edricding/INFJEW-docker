@@ -14,12 +14,11 @@
     <script>
       window.addEventListener("DOMContentLoaded", function () {
         fetch("/api/session/status", {
-          credentials: "include", // ������� cookie
+          credentials: "include",
         })
           .then((res) => res.json())
           .then((data) => {
             if (data.loggedIn) {
-              // �ѵ�¼�û��Զ���ת
               window.location.href = "https://dashboard.infjew.com";
             }
           });
@@ -84,7 +83,11 @@
                   placeholder="Enter your username"
                   required
                 />
-                <div class="invalid-feedback">Please provide the username.</div>
+                <div
+                  id="login-username-msg"
+                  class="mt-1"
+                  style="color: #f36b21; font-size: 12px; display: none"
+                ></div>
               </div>
 
               <div class="mb-3">
@@ -96,7 +99,11 @@
                   placeholder="Enter your password"
                   required
                 />
-                <div class="invalid-feedback">Please provide the password.</div>
+                <div
+                  id="login-password-msg"
+                  class="mt-1"
+                  style="color: #f36b21; font-size: 12px; display: none"
+                ></div>
               </div>
 
               <div class="d-grid">
@@ -110,8 +117,15 @@
               </div>
             </form>
 
+            <div
+              id="login-general-msg"
+              class="mt-2"
+              style="color: #f36b21; font-size: 12px; display: none"
+            ></div>
+
             <p class="mt-auto mb-0">
-              2025 - <script>
+              2025 -
+              <script>
                 document.write(new Date().getFullYear());
               </script>
               @ INFJEW
@@ -134,13 +148,45 @@
         var btn = document.getElementById("login-submit-btn");
         var usernameEl = document.getElementById("login-username");
         var passwordEl = document.getElementById("login-password");
+        var userMsgEl = document.getElementById("login-username-msg");
+        var passMsgEl = document.getElementById("login-password-msg");
+        var generalMsgEl = document.getElementById("login-general-msg");
+
+        function showMsg(el, msg) {
+          if (!el) {
+            return;
+          }
+          if (!msg) {
+            el.style.display = "none";
+            el.textContent = "";
+            return;
+          }
+          el.textContent = msg;
+          el.style.display = "block";
+        }
+
+        function clearMsgs() {
+          showMsg(userMsgEl, "");
+          showMsg(passMsgEl, "");
+          showMsg(generalMsgEl, "");
+        }
 
         function submitLogin() {
+          clearMsgs();
+
           var username = (usernameEl.value || "").trim();
           var password = passwordEl.value || "";
 
-          if (!username || !password) {
-            alert("Please enter username and password.");
+          var hasError = false;
+          if (!username) {
+            showMsg(userMsgEl, "Please enter your username.");
+            hasError = true;
+          }
+          if (!password) {
+            showMsg(passMsgEl, "Please enter your password.");
+            hasError = true;
+          }
+          if (hasError) {
             return;
           }
 
@@ -165,11 +211,11 @@
                 window.location.href = "https://dashboard.infjew.com";
                 return;
               }
-              alert((data && data.message) || "Login failed");
+              showMsg(generalMsgEl, (data && data.message) || "Login failed");
             })
             .catch(function (err) {
               console.error("Login failed", err);
-              alert("Login failed");
+              showMsg(generalMsgEl, "Login failed");
             })
             .finally(function () {
               btn.disabled = false;
