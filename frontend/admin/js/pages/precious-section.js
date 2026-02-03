@@ -350,3 +350,4 @@ function deleteBanner(bannerId) {
     .catch((error) => {
     });
 }
+

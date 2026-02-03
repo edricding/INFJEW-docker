@@ -85,7 +85,7 @@ function fetchAndRenderPreciousList() {
     .then((res) => res.json())
     .then((data) => {
       if (!data.success) {
-        console.error("芒聺?猫聨路氓聫聳氓陇卤猫麓楼茂录?, data.message);
+        console.error("éºæä¼?éî¥ä»ºçºîç³é±î¥ä¼å§æ»æª±éãå°æ¥¹æ´ã¼é¼åç¶?, data.message);
         return;
       }
 
@@ -296,7 +296,7 @@ function addEventListenerAfterDOMLoaded() {
         const id = parseInt(editBtn.getAttribute("data-id"), 10);
         const result = preciousListData.find((row) => row[0] === id);
 
-        console.log("莽录聳猫戮聭忙聦聣茅聮庐莽聜鹿氓聡禄茂录聦忙聣戮氓聢掳莽職聞猫隆聦忙聲掳忙聧庐茂录職", result, preciousListData);
+        console.log("é¾èç¶é±å´å°é´î¿ä¼è¹æ¬ä»¸é±ï½å¯é±î¼ç°®é¾åä» æ¥£æç³é±ï¼î©é¼åç¶é±ï¹ç¹é±ï½åå§æ¹ä»®éºå® å¹é±ç¯ä»¦éî¦æ®é±ï¹ç¹é±åå¹è¹æ¬ä»¹æ´æ¯å¯è¤°æ¡ä¼", result, preciousListData);
 
         fillEditForm(result);
       }
@@ -359,7 +359,7 @@ function addEventListenerAfterDOMLoaded() {
 
     Swal.fire({
       title: "Are you sure?",
-      text: "The data will be deleted茂录?,
+      text: "The data will be deletedé¼åç¶?,
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Delete",
@@ -383,17 +383,17 @@ function addEventListenerAfterDOMLoaded() {
               location.reload();
             } else {
               Swal.fire({
-                title: "芒聺?氓聢聽茅聶陇氓陇卤猫麓楼",
-                text: data.message || "忙聹聧氓聤隆氓聶篓猫驴聰氓聸聻茅聰聶猫炉?,
+                title: "éºæä¼?å§æ¹ä»®é±åå¯é±å æª±å§æ»æª±éãå°æ¥¹æ´ã¼",
+                text: data.message || "è¹æ¬ä¼é±Ñç³é±ãæ®å§æ¹ä¼ç»¡æ¶å°æ¤¹ç£ä¼å§æ¹ä¼é±æå¯é±æä¼éî¤å?,
                 icon: "error",
               });
             }
           })
           .catch((err) => {
-            console.error("芒聺?氓聢聽茅聶陇氓录聜氓赂赂茂录?, err);
+            console.error("éºæä¼?å§æ¹ä»®é±åå¯é±å æª±å§æ³ç¶é±æ»ç³ç§åç¥©é¼åç¶?, err);
             Swal.fire({
-              title: "莽陆聭莽禄聹茅聰聶猫炉炉",
-              text: "氓聢聽茅聶陇氓陇卤猫麓楼茂录聦猫炉路忙拢聙忙聼楼莽陆聭莽禄聹猫驴聻忙聨?,
+              title: "é¾ä»æª°é±î¡å¹ç»å®ä¼é¼å°ä¼é±åå°éå¤å",
+              text: "å§æ¹ä»®é±åå¯é±å æª±å§æ»æª±éãå°æ¥¹æ´ã¼é¼åç¶é±ï¸¾å°éå¤ç¾è¹æ¬å«é±æ¬ç¹é±å¼ã¼é¾ä»æª°é±î¡å¹ç»å®ä¼éî¦âé±è¯²ç¹é±?,
               icon: "error",
             });
           });
@@ -430,14 +430,14 @@ function AddPreciousList(e) {
     .then((response) => response.json())
     .then((result) => {
       if (result.success) {
-        console.log("忙聳掳氓垄聻忙聢聬氓聤聼", result);
+        console.log("è¹æ¬ä¼éºè«ç³é¨å®ä¼è¹æ¬ä»®é±îç³é±ãä¼¡", result);
         location.reload();
       } else {
-        console.error("忙聳掳氓垄聻氓陇卤猫麓楼", result.message);
+        console.error("è¹æ¬ä¼éºè«ç³é¨å®ä¼å§æ»æª±éãå°æ¥¹æ´ã¼", result.message);
       }
     })
     .catch((error) => {
-      console.error("猫炉路忙卤聜氓陇卤猫麓楼", error);
+      console.error("éî¤åçºîç¹éãä» å§æ»æª±éãå°æ¥¹æ´ã¼", error);
     });
 }
 
@@ -452,13 +452,14 @@ function UpdatePreciousList(e) {
     .then((response) => response.json())
     .then((result) => {
       if (result.success) {
-        console.log("忙聸麓忙聳掳忙聢聬氓聤聼", result);
+        console.log("è¹æ¬ä¼æ¥¹æ³ç¹é±è«å¹è¹æ¬ä»®é±îç³é±ãä¼¡", result);
         location.reload();
       } else {
-        console.error("忙聸麓忙聳掳氓陇卤猫麓楼", result.message);
+        console.error("è¹æ¬ä¼æ¥¹æ³ç¹é±è«å¹å§æ»æª±éãå°æ¥¹æ´ã¼", result.message);
       }
     })
     .catch((error) => {
-      console.error("猫炉路忙卤聜氓陇卤猫麓楼", error);
+      console.error("éî¤åçºîç¹éãä» å§æ»æª±éãå°æ¥¹æ´ã¼", error);
     });
 }
+
