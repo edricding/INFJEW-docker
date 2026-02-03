@@ -7,10 +7,10 @@ import (
 	
 	"log"
 
-	"backend/db"
+	"INFJEW/backend/db"
 	"golang.org/x/crypto/bcrypt"
 
-	"backend/session"
+	"INFJEW/backend/session"
 )
 
 type LoginRequest struct {

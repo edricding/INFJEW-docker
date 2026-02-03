@@ -2,7 +2,7 @@
 package middleware
 
 import (
-	"backend/session"
+	"INFJEW/backend/session"
 	"net/http"
 )
 

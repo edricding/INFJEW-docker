@@ -16,7 +16,7 @@ function fillEditForm(result) {
   document.getElementById("edit-precious-title").value = result[2];
   document.getElementById("edit-precious-price").value = result[4];
 
-  // 根据 status（0-3）设置对应 radio
+  // 根据 status�?-3）设置对�?radio
   const statusRadioId = `edit-statusRadio${result[7]}`;
   const radio = document.getElementById(statusRadioId);
   if (radio) {
@@ -37,9 +37,9 @@ function fillEditForm(result) {
 
   // 设置 Tag（如果有对应项）
   const tagSelect = document.getElementById("edit-precious-tag");
-  tagSelect.value = result[3]; // 假设 result[2] 是 "Stelluna" 或 "Adornment"
+  tagSelect.value = result[3]; // 假设 result[2] �?"Stelluna" �?"Adornment"
 
-  // 设置 Ratings（默认为 5）
+  // 设置 Ratings（默认为 5�?
   const ratingSelect = document.getElementById("edit-rating-select");
   for (let i = 0; i < ratingSelect.options.length; i++) {
     if (parseInt(ratingSelect.options[i].value) === result[6]) {
@@ -54,7 +54,7 @@ function fillEditForm(result) {
 }
 
 function clearPreciousForm() {
-  // 文本输入框清空
+  // 文本输入框清�?
   document.getElementById("edit-precious-id").value = "";
   document.getElementById("edit-precious-itemid").value = "";
   document.getElementById("edit-precious-title").value = "";
@@ -63,7 +63,7 @@ function clearPreciousForm() {
   document.getElementById("edit-precious-url").value = "";
   document.getElementById("edit-precious-picture-url").value = "";
 
-  // 折扣栏 disabled 状态恢复（可选）
+  // 折扣�?disabled 状态恢复（可选）
   document.getElementById("edit-precious-discount").disabled = true;
 
   // 单选框（statusRadio）全部取消选中
@@ -78,22 +78,22 @@ function clearPreciousForm() {
 }
 
 function fetchAndRenderPreciousList() {
-  return fetch("https://www.infjew.com/api/preciouslist", {
+  return fetch("/api/preciouslist", {
     method: "GET",
     credentials: "include",
   })
     .then((res) => res.json())
     .then((data) => {
       if (!data.success) {
-        console.error("❌ 获取失败：", data.message);
+        console.error("�?获取失败�?, data.message);
         return;
       }
 
-      // ✅ 格式化并保存
+      // �?格式化并保存
       const formatted = formatPreciousListData(data.data);
       preciousListData = formatted;
 
-      // ✅ 用格式化后的数据重新渲染
+      // �?用格式化后的数据重新渲染
       reRenderPreciousList(formatted);
     });
 }
@@ -174,7 +174,7 @@ function renderPreciousList(data) {
     pagination: { limit: 10 },
     sort: true,
     search: true,
-    data: data, // ✅ 关键点：使用传入的 data，而不是 window.preciousListData
+    data: data, // �?关键点：使用传入�?data，而不�?window.preciousListData
   });
 
   preciousGrid.on("ready", () => {
@@ -199,7 +199,7 @@ function reRenderPreciousList(data) {
     renderPreciousList(data); // 原来的渲染逻辑
     container.classList.remove("fade-out");
     container.classList.add("fade-in");
-  }, 300); // 和 CSS transition 时间一致
+  }, 300); // �?CSS transition 时间一�?
 }
 
 function addEventListenerAfterDOMLoaded() {
@@ -266,7 +266,7 @@ function addEventListenerAfterDOMLoaded() {
       const dataToSend = {
         itemid: preciousData.id,
         title: preciousData.title,
-        price: parseInt(preciousData.price), // 将 price 转换为整数
+        price: parseInt(preciousData.price), // �?price 转换为整�?
         status: statusMapping[preciousData.status],
         discount:
           statusMapping[preciousData.status] === 2
@@ -333,10 +333,10 @@ function addEventListenerAfterDOMLoaded() {
       };
 
       const dataToSend = {
-        id: parseInt(editPreciousData.id), // 保留原有的 id，用于更新操作
+        id: parseInt(editPreciousData.id), // 保留原有�?id，用于更新操�?
         itemid: editPreciousData.itemid,
         title: editPreciousData.title,
-        price: parseInt(editPreciousData.price), // 将 price 转换为整数
+        price: parseInt(editPreciousData.price), // �?price 转换为整�?
         status: statusMapping[editPreciousData.status],
         discount:
           statusMapping[editPreciousData.status] === 2
@@ -359,7 +359,7 @@ function addEventListenerAfterDOMLoaded() {
 
     Swal.fire({
       title: "Are you sure?",
-      text: "The data will be deleted！",
+      text: "The data will be deleted�?,
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Delete",
@@ -371,7 +371,7 @@ function addEventListenerAfterDOMLoaded() {
       buttonsStyling: false,
     }).then((result) => {
       if (result.isConfirmed) {
-        fetch("https://www.infjew.com/api/preciouslist/delete", {
+        fetch("/api/preciouslist/delete", {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -380,20 +380,20 @@ function addEventListenerAfterDOMLoaded() {
           .then((res) => res.json())
           .then((data) => {
             if (data.success) {
-              location.reload(); // 重新加载页面以更新数据
+              location.reload(); // 重新加载页面以更新数�?
             } else {
               Swal.fire({
-                title: "❌ 删除失败",
-                text: data.message || "服务器返回错误",
+                title: "�?删除失败",
+                text: data.message || "服务器返回错�?,
                 icon: "error",
               });
             }
           })
           .catch((err) => {
-            console.error("❌ 删除异常：", err);
+            console.error("�?删除异常�?, err);
             Swal.fire({
               title: "网络错误",
-              text: "删除失败，请检查网络连接",
+              text: "删除失败，请检查网络连�?,
               icon: "error",
             });
           });
@@ -419,8 +419,8 @@ function formatPreciousListData(data) {
 }
 
 function AddPreciousList(e) {
-  // 发送 POST 请求到新增 Precious Item API
-  fetch("https://www.infjew.com/api/preciouslist/create", {
+  // 发�?POST 请求到新�?Precious Item API
+  fetch("/api/preciouslist/create", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -431,7 +431,7 @@ function AddPreciousList(e) {
     .then((result) => {
       if (result.success) {
         console.log("新增成功", result);
-        location.reload(); // 重新加载页面以更新数据
+        location.reload(); // 重新加载页面以更新数�?
       } else {
         console.error("新增失败", result.message);
       }
@@ -442,7 +442,7 @@ function AddPreciousList(e) {
 }
 
 function UpdatePreciousList(e) {
-  fetch(`https://www.infjew.com/api/preciouslist/update`, {
+  fetch(`/api/preciouslist/update`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -453,7 +453,7 @@ function UpdatePreciousList(e) {
     .then((result) => {
       if (result.success) {
         console.log("更新成功", result);
-        location.reload(); // 重新加载页面以更新数据
+        location.reload(); // 重新加载页面以更新数�?
       } else {
         console.error("更新失败", result.message);
       }

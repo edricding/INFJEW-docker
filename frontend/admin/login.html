@@ -13,7 +13,7 @@
 
     <script>
       window.addEventListener("DOMContentLoaded", function () {
-        fetch("https://www.infjew.com/api/session/status", {
+        fetch("/api/session/status", {
           credentials: "include", // 必须带上 cookie
         })
           .then((res) => res.json())

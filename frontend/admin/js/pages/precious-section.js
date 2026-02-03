@@ -1,19 +1,19 @@
 window.bannerList = [];
 window.countingDown = [];
 
-// 登录状态检查模块
+// 登录状态检查模�?
 window.addEventListener("DOMContentLoaded", function () {
-  fetch("https://www.infjew.com/api/banners", {
+  fetch("/api/banners", {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
     },
-    credentials: "include", // 如果需要携带 Cookie
+    credentials: "include", // 如果需要携�?Cookie
   })
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
-        console.log("Banner 数据：", data.data);
+        console.log("Banner 数据�?, data.data);
         bannerList = data.data; // 假设返回的数据格式是 { success: true, data: [...] }
         renderBannerTable(bannerList);
         toggleAddBannerButton(bannerList);
@@ -25,17 +25,17 @@ window.addEventListener("DOMContentLoaded", function () {
       console.error("请求失败:", error);
     });
 
-  fetch("https://www.infjew.com/api/countingdown", {
+  fetch("/api/countingdown", {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
     },
-    credentials: "include", // 如果需要携带 Cookie
+    credentials: "include", // 如果需要携�?Cookie
   })
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
-        console.log("CountingDown 数据：", data.data);
+        console.log("CountingDown 数据�?, data.data);
         countingDown = data.data[0]; // 假设返回的数据格式是 { success: true, data: {...} }
         renderCountingDownTable(countingDown);
       } else {
@@ -46,12 +46,12 @@ window.addEventListener("DOMContentLoaded", function () {
       console.error("请求失败:", error);
     });
 
-  // 使用事件委托监听 .banner-delete-trash 的点击事件
+  // 使用事件委托监听 .banner-delete-trash 的点击事�?
   document.addEventListener("click", function (e) {
     // 判断是否点击的是 .banner-delete-trash 元素
     if (e.target.closest(".banner-delete-trash")) {
       const target = e.target.closest(".banner-delete-trash");
-      const bannerId = target.getAttribute("data-banner-id"); // 获取 data-banner-id 的值
+      const bannerId = target.getAttribute("data-banner-id"); // 获取 data-banner-id 的�?
 
       // 设置 #delete-banner-id 元素的内容为 bannerId
       const idContainer = document.getElementById("delete-banner-id");
@@ -74,7 +74,7 @@ window.addEventListener("DOMContentLoaded", function () {
   document.addEventListener("click", function (e) {
     const target = e.target;
     if (target && target.id === "add-banner-btn") {
-      fetch("https://www.infjew.com/api/banner/create", {
+      fetch("/api/banner/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -84,9 +84,9 @@ window.addEventListener("DOMContentLoaded", function () {
         .then((res) => res.json())
         .then((data) => {
           if (data.success) {
-            console.log("✅ Banner 新增成功");
+            console.log("�?Banner 新增成功");
             renderBannerTable(data.data); // 重新渲染 banner 表格
-            toggleAddBannerButton(data.data); // 更新添加按钮状态
+            toggleAddBannerButton(data.data); // 更新添加按钮状�?
 
             // 成功后可自动关闭 Modal
             const modal = bootstrap.Modal.getInstance(
@@ -94,11 +94,11 @@ window.addEventListener("DOMContentLoaded", function () {
             );
             if (modal) modal.hide();
           } else {
-            console.error("❌ 新增失败: ", data.message);
+            console.error("�?新增失败: ", data.message);
           }
         })
         .catch((err) => {
-          console.error("❌ 请求错误: ", err);
+          console.error("�?请求错误: ", err);
         });
     }
   });
@@ -229,7 +229,7 @@ function renderCountingDownTable(data) {
 
   tbody.appendChild(row);
 
-  // 激活 tooltip
+  // 激�?tooltip
   const tooltipTriggerList = [].slice.call(
     document.querySelectorAll('[data-bs-toggle="tooltip"]')
   );
@@ -248,7 +248,7 @@ function renderCountingDownTable(data) {
     if (target && target.id === "save-countingdown-precious-btn") {
       const updatedData = getCountingDownPreciousForm();
 
-      fetch("https://www.infjew.com/api/countingdown/update", {
+      fetch("/api/countingdown/update", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -259,10 +259,10 @@ function renderCountingDownTable(data) {
         .then((response) => response.json())
         .then((res) => {
           if (res.success) {
-            console.log("✅ 更新成功");
+            console.log("�?更新成功");
 
-            // 重新获取最新 countingDown 数据
-            fetch("https://www.infjew.com/api/countingdown", {
+            // 重新获取最�?countingDown 数据
+            fetch("/api/countingdown", {
               method: "GET",
               headers: {
                 "Content-Type": "application/json",
@@ -281,15 +281,15 @@ function renderCountingDownTable(data) {
                   );
                   if (modal) modal.hide();
                 } else {
-                  console.error("❌ 更新后拉取最新数据失败:", data.message);
+                  console.error("�?更新后拉取最新数据失�?", data.message);
                 }
               });
           } else {
-            console.error("❌ 更新失败:", res.message);
+            console.error("�?更新失败:", res.message);
           }
         })
         .catch((err) => {
-          console.error("❌ 请求更新失败:", err);
+          console.error("�?请求更新失败:", err);
         });
     }
   });
@@ -313,7 +313,7 @@ function fillCountingDownModal(data) {
 function renderBannerTable(data) {
   const tableBody = document.getElementById("index-banner-list-tbody");
 
-  // 清空旧内容
+  // 清空旧内�?
   tableBody.innerHTML = "";
 
   data.forEach((item) => {
@@ -358,7 +358,7 @@ function renderBannerTable(data) {
     tableBody.appendChild(row);
   });
 
-  // 重新激活 Bootstrap Tooltip（必须的）
+  // 重新激�?Bootstrap Tooltip（必须的�?
   const tooltipTriggerList = [].slice.call(
     document.querySelectorAll('[data-bs-toggle="tooltip"]')
   );
@@ -381,7 +381,7 @@ function toggleAddBannerButton(data) {
 }
 
 function deleteBanner(bannerId) {
-  fetch("https://www.infjew.com/api/banner/delete", {
+  fetch("/api/banner/delete", {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
@@ -394,9 +394,9 @@ function deleteBanner(bannerId) {
     .then((data) => {
       if (data.success) {
         console.log("Banner 删除成功");
-        // 删除成功后重新渲染 banner 列表
+        // 删除成功后重新渲�?banner 列表
         renderBannerTable(data.data); // 重新渲染
-        toggleAddBannerButton(data.data); // 更新添加按钮状态
+        toggleAddBannerButton(data.data); // 更新添加按钮状�?
       } else {
         console.log("Banner 删除失败:", data.message);
       }

@@ -6,11 +6,11 @@ function handleLogin() {
   const password = document.getElementById("login-password").value.trim();
 
   if (!username || !password) {
-    console.log("请输入用户名和密码");
+    console.log("请输入用户名和密�?);
     return;
   }
 
-  fetch("https://www.infjew.com/api/AuthLogin", {
+  fetch("/api/AuthLogin", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -58,10 +58,10 @@ if (loginSubmitBtn) {
 const logoutBtn = document.getElementById("logout-btn");
 if (logoutBtn) {
   logoutBtn.addEventListener("click", function () {
-    fetch("https://www.infjew.com/api/AuthLogout", {
+    fetch("/api/AuthLogout", {
       method: "POST", // 使用 POST 方法
       headers: {
-        "Content-Type": "application/json", // 设置请求头，指定内容格式为 JSON
+        "Content-Type": "application/json", // 设置请求头，指定内容格式�?JSON
       },
       credentials: "include", // 👈 允许携带 cookie
     })
@@ -69,8 +69,8 @@ if (logoutBtn) {
       .then((data) => {
         if (data.success) {
           console.log("Logout successful");
-          window.location.href = "https://www.infjew.com/login";
-          // 这里可以清除前端的用户状态，例如删除存储的 token 或清空用户信息
+          window.location.href = "/login";
+          // 这里可以清除前端的用户状态，例如删除存储�?token 或清空用户信�?
         } else {
           console.log("Error:", data.message);
         }

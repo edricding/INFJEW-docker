@@ -5,16 +5,16 @@ window.addEventListener("DOMContentLoaded", function () {
   GetPreciousList();
 
   document.body.addEventListener("click", function (event) {
-    // 检查点击的元素是否是 .jump-to-new
+    // 检查点击的元素是否�?.jump-to-new
     if (event.target.closest(".jump-to-new")) {
       const clickedElement = event.target.closest(".jump-to-new");
 
-      // 判断是否有 "sold-out-active" 类
+      // 判断是否�?"sold-out-active" �?
       if (!clickedElement.classList.contains("sold-out-active")) {
-        // 获取 data-jump 属性的值
+        // 获取 data-jump 属性的�?
         const jumpUrl = clickedElement.dataset.jump;
 
-        // 如果 url 存在，则打开新页面
+        // 如果 url 存在，则打开新页�?
         if (jumpUrl) {
           window.open(jumpUrl, "_blank");
         }
@@ -24,7 +24,7 @@ window.addEventListener("DOMContentLoaded", function () {
 });
 
 function GetBanner() {
-  fetch("https://www.infjew.com/api/public/banners")
+  fetch("/api/public/banners")
     .then((res) => res.json())
     .then((data) => {
       if (!data.success || !Array.isArray(data.data)) {
@@ -35,14 +35,14 @@ function GetBanner() {
       const carousel = $(".hero-area-slider");
       console.log("$carousel", carousel);
 
-      // ✅ 1. 销毁旧的 owlCarousel（如果已经初始化）
+      // �?1. 销毁旧�?owlCarousel（如果已经初始化�?
       if (carousel.hasClass("owl-loaded")) {
         carousel.trigger("destroy.owl.carousel");
         carousel.html(""); // 清空 DOM
         carousel.removeClass("owl-loaded owl-hidden"); // 干净移除 class
       }
 
-      // ✅ 2. 动态添加每一个 slide
+      // �?2. 动态添加每一�?slide
       data.data.forEach((banner) => {
         const slideHtml = `
         <div class="single-slide-item">
@@ -70,7 +70,7 @@ function GetBanner() {
         carousel.append(slideHtml);
       });
 
-      // ✅ 3. 重新初始化 Owl Carousel
+      // �?3. 重新初始�?Owl Carousel
       carousel.owlCarousel({
         items: 1,
         loop: true,
@@ -87,7 +87,7 @@ function GetBanner() {
 }
 
 function GetCountingDown() {
-  fetch("https://www.infjew.com/api/public/countingdown")
+  fetch("/api/public/countingdown")
     .then((res) => res.json())
     .then((data) => {
       if (!data.success || !data.data || data.data.length === 0) {
@@ -95,12 +95,12 @@ function GetCountingDown() {
         return;
       }
 
-      const item = data.data[0]; // 取第一个商品
+      const item = data.data[0]; // 取第一个商�?
 
       const container = document.getElementById("countingdownContainer");
       if (!container) return;
 
-      // 更新标题和折扣信息
+      // 更新标题和折扣信�?
       container.querySelector(
         "h4"
       ).innerHTML = `Precious Sale <span>${item.percentage} Off</span>`;
@@ -131,7 +131,7 @@ function GetCountingDown() {
         imgEl.src = item.picurl;
       }
 
-      // 初始化倒计时
+      // 初始化倒计�?
       const ddl = new Date(item.ddl);
       //   simplyCountdown(".simply-countdown-one", {
       //     year: ddl.getFullYear(),
@@ -150,12 +150,12 @@ function GetCountingDown() {
       });
     })
     .catch((err) => {
-      console.error("获取倒计时数据失败:", err);
+      console.error("获取倒计时数据失�?", err);
     });
 }
 
 function GetPreciousList() {
-  fetch("https://www.infjew.com/api/public/preciouslist")
+  fetch("/api/public/preciouslist")
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
@@ -261,7 +261,7 @@ function createProductCard(product) {
   card.classList.add("top-product-wrapper", "jump-to-new");
   card.dataset.jump = product.url;
 
-  // 判断是否为 "Sold out" 状态
+  // 判断是否�?"Sold out" 状�?
   const isSoldOut = product.status === 0;
   if (isSoldOut) {
     card.classList.add("sold-out-active");
@@ -290,7 +290,7 @@ function createProductCard(product) {
   image.alt = product.title;
   imageWrapper.appendChild(image);
 
-  // 如果 status 为 2，添加折扣标签
+  // 如果 status �?2，添加折扣标�?
   if (product.status === 2 && product.discount < product.price) {
     const discountPercentage = Math.floor(
       ((product.price - product.discount) / product.price) * 100
