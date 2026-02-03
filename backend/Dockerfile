@@ -11,8 +11,9 @@ RUN apk add --no-cache ca-certificates
 COPY go.mod ./
 COPY backend ./backend
 
-RUN go mod download
-RUN CGO_ENABLED=0 GOOS=linux go build -o /out/backend ./backend
+# Ensure go.sum is generated inside the build context.
+RUN go mod tidy
+RUN CGO_ENABLED=0 GOOS=linux go build -mod=mod -o /out/backend ./backend
 
 FROM alpine:3.20
 
