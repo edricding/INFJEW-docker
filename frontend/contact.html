@@ -170,7 +170,19 @@
         <div class="contact-form-wrapper">
           <div class="row">
             <div class="col-xl-7">
-              <div class="contact-form-inner">
+              <div class="contact-form-inner" style="position: relative;">
+                <div id="contact-form-overlay"
+                  style="position: absolute; inset: 0; background: rgba(255, 255, 255, 0.85); display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.3s ease, visibility 0.3s ease; z-index: 10;">
+                  <div style="position: relative; width: 120px; height: 120px;">
+                    <div style="position: absolute; inset: 0; border: 2px solid #ec6600; border-radius: 50%;"></div>
+                    <div style="position: absolute; inset: 10px; border: 2px solid #ec6600; border-radius: 50%;"></div>
+                    <div class="infjew_loader_logo"
+                      style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;">
+                      <img src="https://storage.googleapis.com/bucket-infjew/INFJEW/frontend/images/preload/preload.png"
+                        alt="Preload" style="width: 60px; height: auto; display: block;" />
+                    </div>
+                  </div>
+                </div>
                 <h6>Drop Us A Line</h6>
                 <p>
                   We look forward to hearing from you! Please complete the
@@ -322,6 +334,7 @@
       var emailEl = document.getElementById("contact-form-email");
       var messageEl = document.getElementById("contact-form-message");
       var msgEl = document.getElementById("contact-form-msg");
+      var overlayEl = document.getElementById("contact-form-overlay");
       if (!submitBtn || !tokenEl) {
         return;
       }
@@ -344,6 +357,22 @@
 
       function isValidEmail(email) {
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      }
+
+      function showLoading() {
+        if (!overlayEl) return;
+        overlayEl.style.opacity = "1";
+        overlayEl.style.visibility = "visible";
+        overlayEl.style.pointerEvents = "all";
+      }
+
+      function hideLoading() {
+        if (!overlayEl) return;
+        overlayEl.style.opacity = "0";
+        overlayEl.style.pointerEvents = "none";
+        setTimeout(function () {
+          overlayEl.style.visibility = "hidden";
+        }, 300);
       }
 
       submitBtn.addEventListener("click", function (e) {
@@ -369,6 +398,7 @@
           return;
         }
 
+        showLoading();
         grecaptcha.ready(function () {
           grecaptcha
             .execute("6LeLHmAsAAAAAIMDu4IcbDpVMrSn0QU4u0EyKHVr", { action: "contact" })
@@ -394,13 +424,16 @@
                 if (nameEl) nameEl.value = "";
                 if (emailEl) emailEl.value = "";
                 if (messageEl) messageEl.value = "";
+                hideLoading();
                 return;
               }
               showMsg((data && data.message) || "Send failed.");
+              hideLoading();
             })
             .catch(function (err) {
               console.error("reCAPTCHA failed", err);
               showMsg("Send failed.");
+              hideLoading();
             });
         });
       });
