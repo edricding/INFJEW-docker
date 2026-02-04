@@ -181,18 +181,18 @@
             <div class="card">
               <div class="card-header border-bottom border-dashed d-flex flex-wrap justify-content-between gap-2">
                 <div class="">
-                  <a class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#AddPreciousModal"><i
+                  <a class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#AddUserModal"><i
                       class="ti ti-plus me-1"></i>Add User</a>
                 </div>
 
                 <!-- Modal -->
-                <div class="modal fade" id="AddPreciousModal" data-bs-backdrop="static" data-bs-keyboard="false"
-                  tabindex="-1" aria-labelledby="AddPreciousModalLabel" aria-hidden="true">
+                <div class="modal fade" id="AddUserModal" data-bs-backdrop="static" data-bs-keyboard="false"
+                  tabindex="-1" aria-labelledby="AddUserModalLabel" aria-hidden="true">
                   <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
                     <div class="modal-content">
                       <div class="modal-header text-bg-primary border-0">
-                        <h5 class="modal-title" id="AddPreciousModalLabel">
-                          Add New Precious
+                        <h5 class="modal-title" id="AddUserModalLabel">
+                          Add User
                         </h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                           aria-label="Close"></button>
@@ -205,122 +205,63 @@
                             <div class="card">
                               <div class="card-header border-bottom border-dashed">
                                 <h4 class="card-title">
-                                  Precious Information
+                                  New User
                                 </h4>
                                 <p class="text-muted mb-0">
-                                  Precious on the list are just for the "New
-                                  Arrival" section.
+                                  Add new user.
                                 </p>
                               </div>
 
                               <div class="card-body">
                                 <div class="row">
+
                                   <div class="col-lg-12">
                                     <div class="mb-3">
-                                      <label for="add-precious-id" class="form-label">Precious Id</label>
-                                      <input type="text" class="form-control" data-toggle="input-mask"
-                                        data-mask-format="INF-00-00000000" id="add-precious-id" />
-                                      <span class="fs-13 text-muted">e.g "INF-01-25051701"</span>
-                                    </div>
-                                  </div>
-                                  <div class="col-lg-12">
-                                    <div class="mb-3">
-                                      <label for="add-precious-title" class="form-label">Precious Title</label>
-                                      <input type="text" class="form-control" id="add-precious-title"
-                                        placeholder="Enter Precious Title" required="" />
+                                      <label for="add-new-user-username" class="form-label">Username</label>
+                                      <input type="text" class="form-control" id="add-new-user-username"
+                                        placeholder="Enter new username" required="" />
                                     </div>
                                   </div>
 
                                   <div class="col-lg-12">
                                     <div class="mb-3">
-                                      <label for="add-precious-price" class="form-label">Price</label>
-                                      <div class="input-group flex-nowrap">
-                                        <span class="input-group-text">$</span>
-                                        <input type="number" id="add-precious-price" class="form-control"
-                                          placeholder="Price" aria-label="Price" aria-describedby="preciousPrice" />
-                                      </div>
+                                      <label for="add-new-user-password" class="form-label">New Password</label>
+                                      <input type="password" class="form-control" id="add-new-user-password"
+                                        placeholder="Enter password" />
                                     </div>
                                   </div>
                                   <div class="col-lg-12">
                                     <div class="mb-3">
-                                      <h6 class="fs-15 mt-3">Status</h6>
+                                      <label for="add-new-user-reset-password" class="form-label">Repeat New Password</label>
+                                      <input type="password" class="form-control" id="add-new-user-reset-password"
+                                        placeholder="Repeat password" />
+                                    </div>
+                                  </div>
+
+                                  <div class="col-lg-12">
+                                    <div class="mb-3">
+                                      <h6 class="fs-15 mt-3">Role</h6>
 
                                       <div class="form-check form-radio-primary mb-2">
-                                        <input type="radio" id="add-statusRadio0" name="add-statusRadio"
+                                        <input type="radio" id="add-new-user-roleRadio0" name="add-new-user-roleRadio"
                                           class="form-check-input form-check-input-add" />
-                                        <label class="form-check-label" for="add-statusRadio0">Sold</label>
+                                        <label class="form-check-label" for="add-new-user-roleRadio0">Super Admin</label>
                                       </div>
                                       <div class="form-check form-radio-success mb-2">
-                                        <input type="radio" id="add-statusRadio1" name="add-statusRadio"
+                                        <input type="radio" id="add-new-user-roleRadio1" name="add-new-user-roleRadio"
                                           class="form-check-input form-check-input-add" checked />
-                                        <label class="form-check-label" for="add-statusRadio1">Active</label>
+                                        <label class="form-check-label" for="add-new-user-roleRadio1">Admin</label>
                                       </div>
                                       <div class="form-check form-radio-warning mb-2">
-                                        <input type="radio" id="add-statusRadio2" name="add-statusRadio"
+                                        <input type="radio" id="add-new-user-roleRadio2" name="add-new-user-roleRadio"
                                           class="form-check-input form-check-input-add" />
-                                        <label class="form-check-label" for="add-statusRadio2">Sale</label>
+                                        <label class="form-check-label" for="add-new-user-roleRadio2">User</label>
                                       </div>
 
-                                      <div class="form-check form-radio-infjew mb-2">
-                                        <input type="radio" id="add-statusRadio3" name="add-statusRadio"
-                                          class="form-check-input form-check-input-add" />
-                                        <label class="form-check-label" for="add-statusRadio3">Unavailable</label>
-                                      </div>
+                                     
                                     </div>
                                   </div>
-                                  <div class="col-lg-6">
-                                    <div class="mb-3">
-                                      <label for="add-precious-discount" class="form-label">Discount</label>
-                                      <div class="input-group flex-nowrap">
-                                        <span class="input-group-text">$</span>
-                                        <input type="number" class="form-control" placeholder="Discounts"
-                                          aria-label="Discounts" aria-describedby="add-precious-discount"
-                                          id="add-precious-discount" disabled />
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div class="col-lg-6">
-                                    <div class="mb-3">
-                                      <label for="add-rating-select" class="form-label">Ratings</label>
-                                      <select class="form-select" id="add-rating-select">
-                                        <option>1</option>
-                                        <option>2</option>
-                                        <option>3</option>
-                                        <option>4</option>
-                                        <option>5</option>
-                                      </select>
-                                    </div>
-                                  </div>
-                                  <div class="col-lg-12">
-                                    <div class="mb-3">
-                                      <label for="add-precious-tag" class="form-label">Precious Tag</label>
-                                      <select class="form-select my-1 my-md-0 me-sm-3" data-choices
-                                        data-choices-search-false id="add-precious-tag">
-                                        <option value="Stelluna">
-                                          Stelluna
-                                        </option>
-                                        <option value="Adornment">
-                                          Adornment
-                                        </option>
-                                      </select>
-                                    </div>
-                                  </div>
-
-                                  <div class="col-lg-12">
-                                    <div class="mb-3">
-                                      <label for="add-precious-url" class="form-label">Precious URL</label>
-                                      <input type="text" class="form-control" id="add-precious-url"
-                                        placeholder="Enter Precious URL" required="" />
-                                    </div>
-                                  </div>
-                                  <div class="col-lg-12">
-                                    <div class="mb-3">
-                                      <label for="add-precious-picture-url" class="form-label">Precious Picture
-                                        URL</label>
-                                      <input type="text" class="form-control" id="add-precious-picture-url"
-                                        placeholder="Enter Precious Picture URL" required="" />
-                                    </div>
-                                  </div>
+                                
                                 </div>
                               </div>
                             </div>
@@ -331,8 +272,8 @@
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">
                           Close
                         </button>
-                        <button type="button" class="btn btn-primary" id="add-precious-btn">
-                          Add
+                        <button type="button" class="btn btn-primary" id="add-new-user-btn">
+                          Submit
                         </button>
                       </div>
                       <!-- end modal footer -->

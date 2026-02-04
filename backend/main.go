@@ -39,6 +39,7 @@ func main() {
 	mux.Handle("/api/users", ApplyMiddlewares(http.HandlerFunc(handlers.GetUsersHandler), middleware.WithSessionRefresh, middleware.WithCORS))
 	mux.Handle("/api/users/reset-password", ApplyMiddlewares(http.HandlerFunc(handlers.ResetUserPasswordHandler), middleware.WithSessionRefresh, middleware.WithCORS))
 	mux.Handle("/api/users/delete", ApplyMiddlewares(http.HandlerFunc(handlers.DeleteUserHandler), middleware.WithSessionRefresh, middleware.WithCORS))
+	mux.Handle("/api/users/create", ApplyMiddlewares(http.HandlerFunc(handlers.CreateUserHandler), middleware.WithSessionRefresh, middleware.WithCORS))
 
 	mux.Handle("/api/countingdown/update", ApplyMiddlewares(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {

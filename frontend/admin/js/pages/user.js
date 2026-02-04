@@ -3,6 +3,7 @@ let activeResetUserId = null;
 window.addEventListener("DOMContentLoaded", function () {
   fetchUsers();
   bindResetPasswordActions();
+  bindCreateUserActions();
 });
 
 function fetchUsers() {
@@ -247,4 +248,110 @@ function showResetPasswordMsg(msg) {
   }
   msgEl.textContent = msg;
   msgEl.style.display = "block";
+}
+
+function bindCreateUserActions() {
+  const submitBtn = document.getElementById("add-new-user-btn");
+  if (!submitBtn) {
+    return;
+  }
+
+  submitBtn.addEventListener("click", function () {
+    const usernameEl = document.getElementById("add-new-user-username");
+    const passwordEl = document.getElementById("add-new-user-password");
+    const confirmEl = document.getElementById("add-new-user-reset-password");
+    const roleEl = document.querySelector(
+      'input[name="add-new-user-roleRadio"]:checked'
+    );
+
+    const username = (usernameEl && usernameEl.value ? usernameEl.value : "").trim();
+    const password = passwordEl ? passwordEl.value : "";
+    const confirm = confirmEl ? confirmEl.value : "";
+    const role = mapRoleValue(roleEl ? roleEl.id : "");
+
+    if (!username || !password || !confirm || !role) {
+      Swal.fire({
+        title: "Missing fields",
+        text: "Please fill in username, password, and role.",
+        icon: "warning",
+      });
+      return;
+    }
+
+    if (password !== confirm) {
+      Swal.fire({
+        title: "Password mismatch",
+        text: "Passwords do not match.",
+        icon: "warning",
+      });
+      return;
+    }
+
+    submitBtn.disabled = true;
+    fetch("/api/users/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        username: username,
+        password: password,
+        role: role,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.success) {
+          const modalEl = document.getElementById("AddUserModal");
+          const modal = bootstrap.Modal.getInstance(modalEl);
+          if (modal) {
+            modal.hide();
+          }
+          clearCreateUserForm();
+          Swal.fire({
+            title: "Success",
+            text: "User created successfully",
+            icon: "success",
+          });
+          fetchUsers();
+          return;
+        }
+        Swal.fire({
+          title: "Create failed",
+          text: (data && data.message) || "Create failed.",
+          icon: "error",
+        });
+      })
+      .catch((err) => {
+        console.error("Create user failed", err);
+        Swal.fire({
+          title: "Create failed",
+          text: "Create failed.",
+          icon: "error",
+        });
+      })
+      .finally(() => {
+        submitBtn.disabled = false;
+      });
+  });
+}
+
+function mapRoleValue(roleId) {
+  if (roleId === "add-new-user-roleRadio0") return "superadmin";
+  if (roleId === "add-new-user-roleRadio1") return "admin";
+  if (roleId === "add-new-user-roleRadio2") return "user";
+  return "";
+}
+
+function clearCreateUserForm() {
+  const usernameEl = document.getElementById("add-new-user-username");
+  const passwordEl = document.getElementById("add-new-user-password");
+  const confirmEl = document.getElementById("add-new-user-reset-password");
+  if (usernameEl) usernameEl.value = "";
+  if (passwordEl) passwordEl.value = "";
+  if (confirmEl) confirmEl.value = "";
+
+  const roleDefault = document.getElementById("add-new-user-roleRadio1");
+  if (roleDefault) {
+    roleDefault.checked = true;
+  }
 }
