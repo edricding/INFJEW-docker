@@ -1,5 +1,8 @@
+let activeResetUserId = null;
+
 window.addEventListener("DOMContentLoaded", function () {
   fetchUsers();
+  bindResetPasswordActions();
 });
 
 function fetchUsers() {
@@ -35,6 +38,7 @@ function renderUsersTable(users) {
     <tr>
       <th style="width: 80px;">ID</th>
       <th>Username</th>
+      <th style="width: 140px;">Action</th>
     </tr>
   `;
 
@@ -43,7 +47,7 @@ function renderUsersTable(users) {
   if (users.length === 0) {
     const emptyRow = document.createElement("tr");
     emptyRow.innerHTML = `
-      <td colspan="2" class="text-muted">No users found.</td>
+      <td colspan="3" class="text-muted">No users found.</td>
     `;
     tbody.appendChild(emptyRow);
   } else {
@@ -52,6 +56,15 @@ function renderUsersTable(users) {
       row.innerHTML = `
         <td>${user.id}</td>
         <td>${escapeHtml(user.username || "")}</td>
+        <td>
+          <button type="button"
+            class="btn btn-warning btn-icon btn-sm reset-password-btn"
+            data-bs-toggle="modal"
+            data-bs-target="#ResetPasswordModal"
+            data-id="${user.id}">
+            <i class="ti ti-password"></i>
+          </button>
+        </td>
       `;
       tbody.appendChild(row);
     });
@@ -81,5 +94,93 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function bindResetPasswordActions() {
+  const tableContainer = document.getElementById("table-gridjs");
+  if (tableContainer) {
+    tableContainer.addEventListener("click", function (e) {
+      const btn = e.target.closest(".reset-password-btn");
+      if (!btn) {
+        return;
+      }
+      activeResetUserId = parseInt(btn.getAttribute("data-id"), 10);
+      clearResetPasswordForm();
+    });
+  }
+
+  const submitBtn = document.getElementById("reset-password-btn");
+  if (submitBtn) {
+    submitBtn.addEventListener("click", function () {
+      const passwordEl = document.getElementById("reset-password");
+      const confirmEl = document.getElementById("reset-password-confirm");
+
+      const password = passwordEl ? passwordEl.value : "";
+      const confirm = confirmEl ? confirmEl.value : "";
+
+      if (!activeResetUserId || !password || !confirm) {
+        showResetPasswordMsg("Please enter and confirm the new password.");
+        return;
+      }
+      if (password !== confirm) {
+        showResetPasswordMsg("Passwords do not match.");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      fetch("/api/users/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          id: activeResetUserId,
+          password: password,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.success) {
+            showResetPasswordMsg("");
+            const modalEl = document.getElementById("ResetPasswordModal");
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) {
+              modal.hide();
+            }
+            clearResetPasswordForm();
+            return;
+          }
+          showResetPasswordMsg((data && data.message) || "Update failed.");
+        })
+        .catch((err) => {
+          console.error("Password reset failed", err);
+          showResetPasswordMsg("Update failed.");
+        })
+        .finally(() => {
+          submitBtn.disabled = false;
+        });
+    });
+  }
+}
+
+function clearResetPasswordForm() {
+  const passwordEl = document.getElementById("reset-password");
+  const confirmEl = document.getElementById("reset-password-confirm");
+  if (passwordEl) passwordEl.value = "";
+  if (confirmEl) confirmEl.value = "";
+  showResetPasswordMsg("");
+}
+
+function showResetPasswordMsg(msg) {
+  const msgEl = document.getElementById("reset-password-msg");
+  if (!msgEl) {
+    return;
+  }
+  if (!msg) {
+    msgEl.style.display = "none";
+    msgEl.textContent = "";
+    return;
+  }
+  msgEl.textContent = msg;
+  msgEl.style.display = "block";
 }
 
