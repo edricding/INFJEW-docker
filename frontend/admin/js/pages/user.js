@@ -54,16 +54,18 @@ function renderUsersTable(users) {
     tbody.appendChild(emptyRow);
   } else {
     users.forEach((user) => {
-      const isSuperAdmin = (user.role || "").toLowerCase() === "superadmin";
+      const roleValue = (user.role || "").toLowerCase();
+      const isSuperAdmin = roleValue === "superadmin";
+      const roleBadge = renderRoleBadge(roleValue);
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${user.id}</td>
         <td>${escapeHtml(user.username || "")}</td>
-        <td>${escapeHtml(user.role || "")}</td>
+        <td>${roleBadge}</td>
         <td>
 
         <a href="javascript:void(0);" 
-                 class="btn btn-soft-warning btn-icon btn-sm rounded-circle reset-password-btn" data-bs-toggle="modal"
+                 class="btn btn-soft-warning btn-icon btn-sm rounded-circle reset-password-btn me-1" data-bs-toggle="modal"
             data-bs-target="#ResetPasswordModal"
                  data-id="${user.id}">
                 <i class="ti ti-key"></i>
@@ -108,6 +110,20 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function renderRoleBadge(roleValue) {
+  const label = roleValue ? roleValue.toUpperCase() : "UNKNOWN";
+  if (roleValue === "superadmin") {
+    return `<span class="badge bg-danger">${label}</span>`;
+  }
+  if (roleValue === "admin") {
+    return `<span class="badge bg-warning">${label}</span>`;
+  }
+  if (roleValue === "user") {
+    return `<span class="badge bg-success">${label}</span>`;
+  }
+  return `<span class="badge bg-secondary">${label}</span>`;
 }
 
 function bindResetPasswordActions() {
