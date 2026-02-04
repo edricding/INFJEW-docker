@@ -35,6 +35,8 @@
   <link href="/css/style.css" rel="stylesheet" />
   <!-- Responsive CSS -->
   <link href="/css/responsive.css" rel="stylesheet" />
+  <!-- Contact Overlay CSS -->
+  <link href="/css/contact-overlay.css" rel="stylesheet" />
 
   <!-- jquery -->
   <script src="/js/jquery-1.12.4.min.js"></script>
@@ -170,16 +172,14 @@
         <div class="contact-form-wrapper">
           <div class="row">
             <div class="col-xl-7">
-              <div class="contact-form-inner" style="position: relative;">
-                <div id="contact-form-overlay"
-                  style="position: absolute; inset: 0; background: rgba(255, 255, 255, 0.85); display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.3s ease, visibility 0.3s ease; z-index: 10;">
-                  <div style="position: relative; width: 120px; height: 120px;">
-                    <div style="position: absolute; inset: 0; border: 2px solid #ec6600; border-radius: 50%;"></div>
-                    <div style="position: absolute; inset: 10px; border: 2px solid #ec6600; border-radius: 50%;"></div>
-                    <div class="infjew_loader_logo"
-                      style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;">
+              <div class="contact-form-inner">
+                <div id="contact-form-overlay" class="contact-form-overlay">
+                  <div class="contact-form-loader">
+                    <div class="contact_circle_loader_out"></div>
+                    <div class="contact_circle_loader_in"></div>
+                    <div class="infjew_loader_logo contact-form-loader-logo">
                       <img src="https://storage.googleapis.com/bucket-infjew/INFJEW/frontend/images/preload/preload.png"
-                        alt="Preload" style="width: 60px; height: auto; display: block;" />
+                        alt="Preload" class="contact-form-loader-img" />
                     </div>
                   </div>
                 </div>

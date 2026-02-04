@@ -1,0 +1,68 @@
+@keyframes infjewSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes infjewSpinReverse {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.contact-form-inner {
+  position: relative;
+}
+
+.contact-form-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  z-index: 10;
+}
+
+.contact-form-loader {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.contact-form-overlay .contact_circle_loader_in,
+.contact-form-overlay .contact_circle_loader_out {
+  position: absolute;
+  border: 2px solid #ec6600;
+  border-radius: 50%;
+  border-left-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.contact-form-overlay .contact_circle_loader_in {
+  inset: 10px;
+  animation: infjewSpin 1s linear infinite;
+}
+
+.contact-form-overlay .contact_circle_loader_out {
+  inset: 0;
+  animation: infjewSpinReverse 1.2s linear infinite;
+}
+
+.contact-form-loader-logo {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.contact-form-loader-img {
+  width: 60px;
+  height: auto;
+  display: block;
+}
