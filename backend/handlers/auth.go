@@ -67,7 +67,7 @@ func AuthLoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var hashedPassword string
-	err := db.DB.QueryRow("SELECT password FROM account WHERE username = ?", req.Username).Scan(&hashedPassword)
+	err = db.DB.QueryRow("SELECT password FROM account WHERE username = ?", req.Username).Scan(&hashedPassword)
 	if err == sql.ErrNoRows {
 		log.Printf("❌ 用户不存在: %s", req.Username)
 		json.NewEncoder(w).Encode(LoginResponse{
