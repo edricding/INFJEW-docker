@@ -4,16 +4,17 @@ package middleware
 import (
 	"INFJEW/backend/session"
 	"net/http"
+	"time"
 )
 
-// 自动续期中间件
+// Auto-refresh session expiry for logged-in users.
 func WithSessionRefresh(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sess, _ := session.Store.Get(r, "session-id")
 
 		if username, ok := sess.Values["username"].(string); ok && username != "" {
-			// 检测到已登录，刷新过期时间
-			sess.Options.MaxAge = 3600 // 重新设置 1 小时
+			sess.Options.MaxAge = 3600
+			sess.Values["expiresAt"] = time.Now().Add(time.Hour).Unix()
 			sess.Save(r, w)
 		}
 
