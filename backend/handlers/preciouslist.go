@@ -1,9 +1,12 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
+	"strings"
 
 	"INFJEW/backend/db"
 )
@@ -13,6 +16,7 @@ type PreciousItem struct {
 	ItemID   string `json:"itemid"`
 	Title    string `json:"title"`
 	Tag      string `json:"tag"`
+	Type     string `json:"type"`
 	Price    int    `json:"price"`
 	Discount int    `json:"discount"`
 	Rating   int    `json:"rating"`
@@ -21,60 +25,294 @@ type PreciousItem struct {
 	PicURL   string `json:"picurl"`
 }
 
-// 获取所有 Precious Item
-func GetPreciousListHandler(w http.ResponseWriter, r *http.Request) {
+type preciousItemPayload struct {
+	ID       int    `json:"id"`
+	ItemID   string `json:"itemid"`
+	Title    string `json:"title"`
+	Tag      string `json:"tag"`
+	Type     string `json:"type"`
+	Precious string `json:"precious"` // Alias for "type"
+	Price    int    `json:"price"`
+	Discount int    `json:"discount"`
+	Rating   int    `json:"rating"`
+	Status   int    `json:"status"`
+	URL      string `json:"url"`
+	PicURL   string `json:"picurl"`
+}
+
+func (p preciousItemPayload) normalizedType() string {
+	if t := strings.TrimSpace(p.Type); t != "" {
+		return t
+	}
+	return strings.TrimSpace(p.Precious)
+}
+
+func (p preciousItemPayload) normalizedTag() string {
+	return strings.TrimSpace(p.Tag)
+}
+
+func (p preciousItemPayload) normalizedItemID() string {
+	return strings.TrimSpace(p.ItemID)
+}
+
+func (p preciousItemPayload) normalizedTitle() string {
+	return strings.TrimSpace(p.Title)
+}
+
+func (p preciousItemPayload) normalizedURL() string {
+	return strings.TrimSpace(p.URL)
+}
+
+func (p preciousItemPayload) normalizedPicURL() string {
+	return strings.TrimSpace(p.PicURL)
+}
+
+func writeJSON(w http.ResponseWriter, statusCode int, payload map[string]interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	_ = json.NewEncoder(w).Encode(payload)
+}
+
+func loadPreciousItems() ([]PreciousItem, error) {
+	rows, err := db.DB.Query(`
+		SELECT id, itemid, title, tag, type, price, discount, rating, status, url, picurl
+		FROM preciousList
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]PreciousItem, 0)
+	for rows.Next() {
+		var item PreciousItem
+		if err := rows.Scan(
+			&item.ID,
+			&item.ItemID,
+			&item.Title,
+			&item.Tag,
+			&item.Type,
+			&item.Price,
+			&item.Discount,
+			&item.Rating,
+			&item.Status,
+			&item.URL,
+			&item.PicURL,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
+func loadStringList(query string) ([]string, error) {
+	rows, err := db.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	values := make([]string, 0)
+	for rows.Next() {
+		var value string
+		if err := rows.Scan(&value); err != nil {
+			return nil, err
+		}
+		value = strings.TrimSpace(value)
+		if value == "" {
+			continue
+		}
+		values = append(values, value)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return values, nil
+}
+
+func loadPreciousTypes() ([]string, error) {
+	return loadStringList(`
+		SELECT types
+		FROM preciousTypes
+		ORDER BY id ASC
+	`)
+}
+
+func loadPreciousTags() ([]string, error) {
+	return loadStringList(`
+		SELECT tags
+		FROM preciousTags
+		ORDER BY id ASC
+	`)
+}
+
+func getDefaultPreciousType() (string, error) {
+	types, err := loadPreciousTypes()
+	if err != nil {
+		return "", err
+	}
+	if len(types) == 0 {
+		return "", nil
+	}
+	return types[0], nil
+}
+
+func getExistingPreciousType(id int) (string, error) {
+	var preciousType string
+	err := db.DB.QueryRow(`
+		SELECT type
+		FROM preciousList
+		WHERE id = ?
+	`, id).Scan(&preciousType)
+	if err == sql.ErrNoRows {
+		return "", errors.New("item not found")
+	}
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(preciousType), nil
+}
+
+func validateCreatePayload(payload preciousItemPayload) (preciousItemPayload, error) {
+	payload.ItemID = payload.normalizedItemID()
+	payload.Title = payload.normalizedTitle()
+	payload.Tag = payload.normalizedTag()
+	payload.Type = payload.normalizedType()
+	payload.URL = payload.normalizedURL()
+	payload.PicURL = payload.normalizedPicURL()
+
+	if payload.Type == "" {
+		defaultType, err := getDefaultPreciousType()
+		if err != nil {
+			return payload, err
+		}
+		payload.Type = defaultType
+	}
+
+	if payload.ItemID == "" ||
+		payload.Title == "" ||
+		payload.Tag == "" ||
+		payload.Type == "" ||
+		payload.URL == "" ||
+		payload.PicURL == "" {
+		return payload, errors.New("missing required fields")
+	}
+
+	return payload, nil
+}
+
+func validateUpdatePayload(payload preciousItemPayload) (preciousItemPayload, error) {
+	payload.ItemID = payload.normalizedItemID()
+	payload.Title = payload.normalizedTitle()
+	payload.Tag = payload.normalizedTag()
+	payload.Type = payload.normalizedType()
+	payload.URL = payload.normalizedURL()
+	payload.PicURL = payload.normalizedPicURL()
+
+	if payload.ID <= 0 {
+		return payload, errors.New("invalid id")
+	}
+
+	if payload.ItemID == "" ||
+		payload.Title == "" ||
+		payload.Tag == "" ||
+		payload.URL == "" ||
+		payload.PicURL == "" {
+		return payload, errors.New("missing required fields")
+	}
+
+	if payload.Type == "" {
+		existingType, err := getExistingPreciousType(payload.ID)
+		if err != nil {
+			return payload, err
+		}
+		payload.Type = existingType
+	}
+
+	if payload.Type == "" {
+		return payload, errors.New("type is required")
+	}
+
+	return payload, nil
+}
+
+// GetPreciousMetaHandler returns type/tag options for precious form selects.
+func GetPreciousMetaHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]interface{}{
 			"success": false,
 			"message": "Method Not Allowed",
 		})
 		return
 	}
 
-	rows, err := db.DB.Query(`
-		SELECT id, itemid, title, tag, price, discount, rating, status, url, picurl
-		FROM preciousList
-	`)
+	types, err := loadPreciousTypes()
 	if err != nil {
-		log.Printf("❌ 查询 preciousList 失败: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		log.Printf("failed to query preciousTypes: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"success": false,
-			"message": "数据库查询失败",
+			"message": "Database query failed",
 		})
 		return
 	}
-	defer rows.Close()
 
-	var items []PreciousItem
-	for rows.Next() {
-		var item PreciousItem
-		if err := rows.Scan(&item.ID, &item.ItemID, &item.Title, &item.Tag, &item.Price, &item.Discount, &item.Rating, &item.Status, &item.URL, &item.PicURL); err != nil {
-			log.Printf("❌ 数据行解析失败: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]interface{}{
-				"success": false,
-				"message": "数据解析失败",
-			})
-			return
-		}
-		items = append(items, item)
+	tags, err := loadPreciousTags()
+	if err != nil {
+		log.Printf("failed to query preciousTags: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"success": false,
+			"message": "Database query failed",
+		})
+		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"success": true,
+		"data": map[string]interface{}{
+			"types": types,
+			"tags":  tags,
+		},
+	})
+}
+
+// GetPreciousListHandler returns all precious items for admin.
+func GetPreciousListHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]interface{}{
+			"success": false,
+			"message": "Method Not Allowed",
+		})
+		return
+	}
+
+	items, err := loadPreciousItems()
+	if err != nil {
+		log.Printf("failed to query preciousList: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"success": false,
+			"message": "Database query failed",
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,
 		"data":    items,
 	})
 }
 
-
-// 删除 Precious Item
+// DeletePreciousItemHandler deletes one precious item by id.
 func DeletePreciousItemHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]interface{}{
 			"success": false,
 			"message": "Method Not Allowed",
 		})
@@ -84,274 +322,214 @@ func DeletePreciousItemHandler(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		ID int `json:"id"`
 	}
-
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		log.Printf("❌ 请求解析失败: %v", err)
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		log.Printf("failed to decode delete request: %v", err)
+		writeJSON(w, http.StatusBadRequest, map[string]interface{}{
 			"success": false,
-			"message": "请求体无效",
+			"message": "Invalid request body",
 		})
 		return
 	}
 
-	// 执行删除
-	_, err := db.DB.Exec("DELETE FROM preciousList WHERE id = ?", req.ID)
+	if req.ID <= 0 {
+		writeJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"success": false,
+			"message": "Invalid id",
+		})
+		return
+	}
+
+	if _, err := db.DB.Exec("DELETE FROM preciousList WHERE id = ?", req.ID); err != nil {
+		log.Printf("failed to delete precious item: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"success": false,
+			"message": "Delete failed",
+		})
+		return
+	}
+
+	items, err := loadPreciousItems()
 	if err != nil {
-		log.Printf("❌ 删除数据失败: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		log.Printf("failed to reload precious list after delete: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"success": false,
-			"message": "删除失败",
+			"message": "Deleted but failed to reload list",
 		})
 		return
 	}
 
-	// 删除成功后返回当前列表
-	rows, err := db.DB.Query(`
-		SELECT id, itemid, title, tag, price, discount, rating, status, url, picurl
-		FROM preciousList
-	`)
-	if err != nil {
-		log.Printf("❌ 查询列表失败: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"success": false,
-			"message": "删除成功但获取数据失败",
-		})
-		return
-	}
-	defer rows.Close()
-
-	var items []PreciousItem
-	for rows.Next() {
-		var item PreciousItem
-		if err := rows.Scan(&item.ID, &item.ItemID, &item.Title, &item.Tag, &item.Price, &item.Discount, &item.Rating, &item.Status, &item.URL, &item.PicURL); err != nil {
-			log.Printf("❌ 数据解析失败: %v", err)
-			continue
-		}
-		items = append(items, item)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,
-		"message": "删除成功",
+		"message": "Deleted successfully",
 		"data":    items,
 	})
 }
 
-
-// 新增 Precious Item
+// CreatePreciousItemHandler creates a precious item.
 func CreatePreciousItemHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]interface{}{
 			"success": false,
 			"message": "Method Not Allowed",
 		})
 		return
 	}
 
-	// 解析请求体中的 JSON 数据
-	var newItem PreciousItem
-	if err := json.NewDecoder(r.Body).Decode(&newItem); err != nil {
-		log.Printf("❌ 请求解析失败: %v", err)
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+	var payload preciousItemPayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		log.Printf("failed to decode create request: %v", err)
+		writeJSON(w, http.StatusBadRequest, map[string]interface{}{
 			"success": false,
-			"message": "请求体无效",
+			"message": "Invalid request body",
 		})
 		return
 	}
 
-	// 执行数据库插入操作
-	_, err := db.DB.Exec(
-		"INSERT INTO preciousList (itemid, title, tag, price, discount, rating, status, url, picurl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		newItem.ItemID, newItem.Title, newItem.Tag, newItem.Price, newItem.Discount, newItem.Rating, newItem.Status, newItem.URL, newItem.PicURL,
+	payload, err := validateCreatePayload(payload)
+	if err != nil {
+		log.Printf("invalid create payload: %v", err)
+		writeJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"success": false,
+			"message": "Missing or invalid fields",
+		})
+		return
+	}
+
+	_, err = db.DB.Exec(`
+		INSERT INTO preciousList (itemid, title, tag, type, price, discount, rating, status, url, picurl)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`,
+		payload.ItemID,
+		payload.Title,
+		payload.Tag,
+		payload.Type,
+		payload.Price,
+		payload.Discount,
+		payload.Rating,
+		payload.Status,
+		payload.URL,
+		payload.PicURL,
 	)
 	if err != nil {
-		log.Printf("❌ 插入数据失败: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		log.Printf("failed to create precious item: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"success": false,
-			"message": "新增数据失败",
+			"message": "Create failed",
 		})
 		return
 	}
 
-	// 插入成功后返回当前所有的 preciousList
-	rows, err := db.DB.Query(
-		"SELECT id, itemid, title, tag, price, discount, rating, status, url, picurl FROM preciousList",
-	)
+	items, err := loadPreciousItems()
 	if err != nil {
-		log.Printf("❌ 查询列表失败: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		log.Printf("failed to reload precious list after create: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"success": false,
-			"message": "新增成功但获取数据失败",
+			"message": "Created but failed to reload list",
 		})
 		return
 	}
-	defer rows.Close()
 
-	var items []PreciousItem
-	for rows.Next() {
-		var item PreciousItem
-		if err := rows.Scan(&item.ID, &item.ItemID, &item.Title, &item.Tag, &item.Price, &item.Discount, &item.Rating, &item.Status, &item.URL, &item.PicURL); err != nil {
-			log.Printf("❌ 数据解析失败: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]interface{}{
-				"success": false,
-				"message": "数据解析失败",
-			})
-			return
-		}
-		items = append(items, item)
-	}
-
-	// 返回更新后的列表数据
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,
-		"message": "新增成功",
+		"message": "Created successfully",
 		"data":    items,
 	})
 }
 
-// 更新 Precious Item
+// UpdatePreciousItemHandler updates a precious item.
 func UpdatePreciousItemHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]interface{}{
 			"success": false,
 			"message": "Method Not Allowed",
 		})
 		return
 	}
 
-	// 解析请求体中的 JSON 数据
-	var updatedItem struct {
-		ID       int    `json:"id"`
-		ItemID   string `json:"itemid"`
-		Title    string `json:"title"`
-		Tag      string `json:"tag"`
-		Price    int    `json:"price"`
-		Discount int    `json:"discount"`
-		Rating   int    `json:"rating"`
-		Status   int    `json:"status"`
-		URL      string `json:"url"`
-		PicURL   string `json:"picurl"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&updatedItem); err != nil {
-		log.Printf("❌ 请求解析失败: %v", err)
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+	var payload preciousItemPayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		log.Printf("failed to decode update request: %v", err)
+		writeJSON(w, http.StatusBadRequest, map[string]interface{}{
 			"success": false,
-			"message": "请求体无效",
+			"message": "Invalid request body",
 		})
 		return
 	}
 
-	// 执行数据库更新操作
-	_, err := db.DB.Exec(
-		"UPDATE preciousList SET itemid = ?, title = ?, tag = ?, price = ?, discount = ?, rating = ?, status = ?, url = ?, picurl = ? WHERE id = ?",
-		updatedItem.ItemID, updatedItem.Title, updatedItem.Tag, updatedItem.Price, updatedItem.Discount, updatedItem.Rating, updatedItem.Status, updatedItem.URL, updatedItem.PicURL, updatedItem.ID,
+	payload, err := validateUpdatePayload(payload)
+	if err != nil {
+		log.Printf("invalid update payload: %v", err)
+		writeJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"success": false,
+			"message": "Missing or invalid fields",
+		})
+		return
+	}
+
+	_, err = db.DB.Exec(`
+		UPDATE preciousList
+		SET itemid = ?, title = ?, tag = ?, type = ?, price = ?, discount = ?, rating = ?, status = ?, url = ?, picurl = ?
+		WHERE id = ?
+	`,
+		payload.ItemID,
+		payload.Title,
+		payload.Tag,
+		payload.Type,
+		payload.Price,
+		payload.Discount,
+		payload.Rating,
+		payload.Status,
+		payload.URL,
+		payload.PicURL,
+		payload.ID,
 	)
 	if err != nil {
-		log.Printf("❌ 更新数据失败: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		log.Printf("failed to update precious item: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"success": false,
-			"message": "更新数据失败",
+			"message": "Update failed",
 		})
 		return
 	}
 
-	// 更新成功后返回当前所有的 preciousList
-	rows, err := db.DB.Query(
-		"SELECT id, itemid, title, tag, price, discount, rating, status, url, picurl FROM preciousList",
-	)
+	items, err := loadPreciousItems()
 	if err != nil {
-		log.Printf("❌ 查询列表失败: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		log.Printf("failed to reload precious list after update: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"success": false,
-			"message": "更新成功但获取数据失败",
+			"message": "Updated but failed to reload list",
 		})
 		return
 	}
-	defer rows.Close()
 
-	var items []PreciousItem
-	for rows.Next() {
-		var item PreciousItem
-		if err := rows.Scan(&item.ID, &item.ItemID, &item.Title, &item.Tag, &item.Price, &item.Discount, &item.Rating, &item.Status, &item.URL, &item.PicURL); err != nil {
-			log.Printf("❌ 数据解析失败: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]interface{}{
-				"success": false,
-				"message": "数据解析失败",
-			})
-			return
-		}
-		items = append(items, item)
-	}
-
-	// 返回更新后的列表数据
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,
-		"message": "更新成功",
+		"message": "Updated successfully",
 		"data":    items,
 	})
 }
 
-
-
+// PublicGetPreciousItemsHandler returns all precious items for public pages.
 func PublicGetPreciousItemsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]interface{}{
 			"success": false,
 			"message": "Method Not Allowed",
 		})
 		return
 	}
 
-	rows, err := db.DB.Query(`
-		SELECT id, itemid, title, tag, price, discount, rating, status, url, picurl
-		FROM preciousList
-	`)
+	items, err := loadPreciousItems()
 	if err != nil {
-		log.Printf("❌ 查询 preciousList 失败: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		log.Printf("failed to query public preciousList: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"success": false,
-			"message": "数据库查询失败",
+			"message": "Database query failed",
 		})
 		return
 	}
-	defer rows.Close()
 
-	var items []PreciousItem
-	for rows.Next() {
-		var item PreciousItem
-		if err := rows.Scan(&item.ID, &item.ItemID, &item.Title, &item.Tag, &item.Price, &item.Discount, &item.Rating, &item.Status, &item.URL, &item.PicURL); err != nil {
-			log.Printf("❌ 数据行解析失败: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]interface{}{
-				"success": false,
-				"message": "数据解析失败",
-			})
-			return
-		}
-		items = append(items, item)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,
 		"data":    items,
 	})
