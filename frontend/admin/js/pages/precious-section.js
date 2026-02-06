@@ -115,6 +115,38 @@ function getAddBannerForm() {
   return newBanner;
 }
 
+function toDisplayText(value, fallback = "-") {
+  if (value === null || value === undefined) {
+    return fallback;
+  }
+
+  const text = String(value).trim();
+  return text.length > 0 ? text : fallback;
+}
+
+function escapeHtmlAttr(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function initTooltipsIn(scopeEl) {
+  if (!scopeEl || !window.bootstrap || !window.bootstrap.Tooltip) {
+    return;
+  }
+
+  scopeEl.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => {
+    const rawTitle = el.getAttribute("data-bs-title") || el.getAttribute("title");
+    const safeTitle = toDisplayText(rawTitle);
+    el.setAttribute("data-bs-title", safeTitle);
+    el.setAttribute("title", safeTitle);
+    bootstrap.Tooltip.getOrCreateInstance(el);
+  });
+}
+
 function getCountingDownPreciousForm() {
   const priceValue = parseFloat(
     document.getElementById("edit-countingdown-price").value.trim()
@@ -181,38 +213,49 @@ function getCountingDownPreciousForm() {
 
 function renderCountingDownTable(data) {
   const tbody = document.getElementById("index-counting-down-tbody");
+  const item = data || {};
 
 
   tbody.innerHTML = "";
+
+  const pictureUrl = toDisplayText(item.picurl, "");
+  const linkUrl = toDisplayText(item.url);
+  const imageCellHtml = pictureUrl
+    ? `<img
+        src="${escapeHtmlAttr(pictureUrl)}"
+        alt="table-user"
+        class="me-2 avatar-xl"
+      />`
+    : "-";
+  const linkCellHtml = linkUrl === "-"
+    ? "-"
+    : `<a
+        href="javascript:void(0);"
+        class="link-reset fs-20 p-1 text-infjew"
+        data-bs-toggle="tooltip"
+        data-bs-trigger="hover"
+        data-bs-title="${escapeHtmlAttr(linkUrl)}"
+        title="${escapeHtmlAttr(linkUrl)}"
+      >
+        <i class="ti ti-link"></i>
+      </a>`;
 
   const row = document.createElement("tr");
 
   row.innerHTML = `
     <td>
-      <img
-        src="${data.picurl}"
-        alt="table-user"
-        class="me-2 avatar-xl"
-      />
+      ${imageCellHtml}
     </td>
-    <td>${data.title}</td>
-    <td>$${data.price}</td>
-    <td>$${data.discount}</td>
+    <td>${toDisplayText(item.title)}</td>
+    <td>$${toDisplayText(item.price)}</td>
+    <td>$${toDisplayText(item.discount)}</td>
     <td>
-      <span class="badge bg-infjew fs-12 p-1">${data.percentage}</span>
+      <span class="badge bg-infjew fs-12 p-1">${toDisplayText(item.percentage)}</span>
     </td>
-    <td>${data.rating}</td>
-    <td>${data.ddl}</td>
+    <td>${toDisplayText(item.rating)}</td>
+    <td>${toDisplayText(item.ddl)}</td>
     <td class="text-muted">
-      <a
-        href="javascript:void(0);"
-        class="link-reset fs-20 p-1 text-infjew"
-        data-bs-toggle="tooltip"
-        data-bs-trigger="hover"
-        data-bs-title="${data.url}"
-      >
-        <i class="ti ti-link"></i>
-      </a>
+      ${linkCellHtml}
     </td>
     <td class="text-muted">
       <a
@@ -230,12 +273,7 @@ function renderCountingDownTable(data) {
   tbody.appendChild(row);
 
 
-  const tooltipTriggerList = [].slice.call(
-    document.querySelectorAll('[data-bs-toggle="tooltip"]')
-  );
-  tooltipTriggerList.forEach(function (el) {
-    new bootstrap.Tooltip(el);
-  });
+  initTooltipsIn(tbody);
 
   document
     .getElementById("countingdown-precious-edit-btn")
@@ -317,30 +355,40 @@ function renderBannerTable(data) {
   tableBody.innerHTML = "";
 
   data.forEach((item) => {
-    const row = document.createElement("tr");
-
-    row.innerHTML = `
-      <td>
-        <img
-          src="${item.picurl}"
+    const pictureUrl = toDisplayText(item.picurl, "");
+    const linkUrl = toDisplayText(item.url);
+    const imageCellHtml = pictureUrl
+      ? `<img
+          src="${escapeHtmlAttr(pictureUrl)}"
           alt="table-user"
           class="me-2 avatar-xl"
-        />
-      </td>
-      <td>${item.id}</td>
-      <td>${item.title1}</td>
-      <td>${item.title2}</td>
-      <td>${item.subtitle}</td>
-      <td class="text-muted">
-        <a
+        />`
+      : "-";
+    const linkCellHtml = linkUrl === "-"
+      ? "-"
+      : `<a
           href="javascript:void(0);"
           class="link-reset fs-20 p-1 text-infjew"
           data-bs-toggle="tooltip"
           data-bs-trigger="hover"
-          data-bs-title="${item.url}"
+          data-bs-title="${escapeHtmlAttr(linkUrl)}"
+          title="${escapeHtmlAttr(linkUrl)}"
         >
           <i class="ti ti-link"></i>
-        </a>
+        </a>`;
+
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td>
+        ${imageCellHtml}
+      </td>
+      <td>${toDisplayText(item.id)}</td>
+      <td>${toDisplayText(item.title1)}</td>
+      <td>${toDisplayText(item.title2)}</td>
+      <td>${toDisplayText(item.subtitle)}</td>
+      <td class="text-muted">
+        ${linkCellHtml}
       </td>
       <td class="text-muted">
         <a
@@ -359,12 +407,7 @@ function renderBannerTable(data) {
   });
 
 
-  const tooltipTriggerList = [].slice.call(
-    document.querySelectorAll('[data-bs-toggle="tooltip"]')
-  );
-  tooltipTriggerList.forEach(function (tooltipTriggerEl) {
-    new bootstrap.Tooltip(tooltipTriggerEl);
-  });
+  initTooltipsIn(tableBody);
 }
 
 function toggleAddBannerButton(data) {
