@@ -178,7 +178,12 @@ function renderPreciousList(data) {
       { name: "ItemID", width: "200px" },
       { name: "Title", width: "250px" },
       { name: "Type", width: "120px" },
-      { name: "Tag", width: "120px" },
+      {
+        name: "Tag",
+        width: "120px",
+        formatter: (e) =>
+          gridjs.html(`<span class="badge bg-infjew fs-12 p-1">${e}</span>`),
+      },
       { name: "Price", width: "80px" },
       { name: "Discount", width: "80px" },
       { name: "Rating", width: "80px" },
