@@ -180,7 +180,15 @@ function renderPreciousList(data) {
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
 
-  const renderTooltipLink = (value) => {
+  const isPreviewableImageUrl = (value) => {
+    const raw = String(value ?? "").trim();
+    if (!raw) {
+      return false;
+    }
+    return /^(https?:\/\/|\/)/i.test(raw);
+  };
+
+  const renderTextTooltipLink = (value) => {
     const tooltipValue = String(value ?? "").trim() || "-";
     const safeTooltipValue = escapeHtmlAttr(tooltipValue);
     return gridjs.html(
@@ -193,6 +201,32 @@ function renderPreciousList(data) {
           title="${safeTooltipValue}"
         >
           <i class="ti ti-link"></i>
+        </a>`
+    );
+  };
+
+  const renderImagePreviewTooltipLink = (value) => {
+    const rawValue = String(value ?? "").trim();
+    const safeRawValue = escapeHtmlAttr(rawValue || "-");
+    const previewHtml = isPreviewableImageUrl(rawValue)
+      ? `<img src="${escapeHtmlAttr(
+          rawValue
+        )}" alt="Preview" style="display:block;max-width:180px;max-height:180px;object-fit:cover;border-radius:8px;" />`
+      : `<span class="fs-12">No preview</span>`;
+
+    return gridjs.html(
+      `<a
+          href="javascript:void(0);"
+          class="link-reset fs-20 p-1 text-infjew"
+          data-bs-toggle="tooltip"
+          data-bs-trigger="hover"
+          data-bs-container="body"
+          data-bs-html="true"
+          data-bs-sanitize="false"
+          data-bs-title='${previewHtml}'
+          title="${safeRawValue}"
+        >
+          <i class="ti ti-photo"></i>
         </a>`
     );
   };
@@ -231,12 +265,12 @@ function renderPreciousList(data) {
       {
         name: "Url",
         width: "50px",
-        formatter: (e) => renderTooltipLink(e),
+        formatter: (e) => renderTextTooltipLink(e),
       },
       {
         name: "PicUrl",
         width: "50px",
-        formatter: (e) => renderTooltipLink(e),
+        formatter: (e) => renderImagePreviewTooltipLink(e),
       },
       {
         name: "Action",
