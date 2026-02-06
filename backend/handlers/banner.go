@@ -23,12 +23,6 @@ type BannerReorderRequest struct {
 	IDs []int `json:"ids"`
 }
 
-func writeJSON(w http.ResponseWriter, status int, payload map[string]interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(payload)
-}
-
 func ensureBannerSortOrderColumn() error {
 	rows, err := db.DB.Query("SHOW COLUMNS FROM banner LIKE 'sort_order'")
 	if err != nil {
