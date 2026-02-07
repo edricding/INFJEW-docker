@@ -169,13 +169,63 @@ function GetPreciousList() {
     });
 }
 
+function ensureNewArrivalRenderRoot() {
+  const newArrivalSection = document.querySelector(".top-sell-prod-area");
+  if (!newArrivalSection) {
+    console.error("New Arrival section not found");
+    return null;
+  }
+
+  const mountPoint =
+    newArrivalSection.querySelector(".container .row > .col-xl-12.text-center") ||
+    newArrivalSection.querySelector(".container") ||
+    newArrivalSection;
+
+  let tabContainer = newArrivalSection.querySelector("#newArrivalTabContainer");
+  if (!tabContainer) {
+    let nav = newArrivalSection.querySelector("nav");
+    if (!nav) {
+      nav = document.createElement("nav");
+      mountPoint.appendChild(nav);
+    }
+
+    tabContainer = document.createElement("div");
+    tabContainer.id = "newArrivalTabContainer";
+    tabContainer.classList.add(
+      "nav",
+      "nav-pills",
+      "product-list",
+      "justify-content-center"
+    );
+    tabContainer.setAttribute("role", "tablist");
+    nav.appendChild(tabContainer);
+  }
+
+  let tabContent = newArrivalSection.querySelector("#nav-tabContent");
+  if (!tabContent) {
+    tabContent = document.createElement("div");
+    tabContent.id = "nav-tabContent";
+    tabContent.classList.add("tab-content");
+    mountPoint.appendChild(tabContent);
+  }
+
+  return { tabContainer, tabContent };
+}
+
 function renderProducts(products) {
-  const allProductsContainer = document.querySelector("#all-products .row");
-  const tabContainer = document.querySelector("#newArrivalTabContainer");
-  const tabContent = document.querySelector("#nav-tabContent");
+  if (!Array.isArray(products)) {
+    console.error("Invalid products payload:", products);
+    return;
+  }
+
+  const renderRoot = ensureNewArrivalRenderRoot();
+  if (!renderRoot) {
+    return;
+  }
+
+  const { tabContainer, tabContent } = renderRoot;
 
   // 清空现有内容
-  allProductsContainer.innerHTML = "";
   tabContainer.innerHTML = "";
   tabContent.innerHTML = "";
 
