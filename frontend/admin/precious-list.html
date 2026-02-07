@@ -10,8 +10,7 @@
 <!-- App favicon -->
 <link rel="shortcut icon" href="https://storage.googleapis.com/bucket-infjew/INFJEW/backend/images/favicon.jpg" />
 
-<link href="/vendor/quill/quill.core.css" rel="stylesheet" type="text/css" />
-<link href="/vendor/quill/quill.snow.css" rel="stylesheet" type="text/css" />
+
 
 <!-- Theme Config Js -->
 <script src="/js/config.js"></script>
@@ -30,6 +29,10 @@
 
 <!-- Sweet Alert css-->
 <link href="/vendor/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
+<link href="/vendor/quill/quill.core.css" rel="stylesheet" type="text/css" />
+<link href="/vendor/quill/quill.snow.css" rel="stylesheet" type="text/css" />
+
 </head>
 
 <body>
@@ -716,7 +719,28 @@
 
 
   <script src="/vendor/quill/quill.min.js"></script>
-
+  <!-- 
+  var quill = new Quill("#precious-info-desc", {
+    theme: "snow",
+    modules: {
+      toolbar: [
+        [{ font: [] }, { size: [] }],
+        ["bold", "italic", "underline", "strike"],
+        [{ color: [] }, { background: [] }],
+        [{ script: "super" }, { script: "sub" }],
+        [{ header: [!1, 1, 2, 3, 4, 5, 6] }, "blockquote", "code-block"],
+        [
+          { list: "ordered" },
+          { list: "bullet" },
+          { indent: "-1" },
+          { indent: "+1" },
+        ],
+        ["direction", { align: [] }],
+        ["link", "image", "video"],
+        ["clean"],
+      ],
+    }
+  }) -->
 
   <script src="/js/pages/precious-list.js"></script>
 
