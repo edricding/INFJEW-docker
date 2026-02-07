@@ -148,6 +148,33 @@
       });
   }
 
+  function handleSearchSubmit() {
+    if (currentMode === "tag") {
+      searchByTagCode();
+      return;
+    }
+
+    setInfoMessage("Order search is not ready yet.", true);
+  }
+
+  function bindEnterSearch(inputElement) {
+    if (!inputElement) {
+      return;
+    }
+
+    inputElement.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" || event.keyCode === 13) {
+        event.preventDefault();
+        handleSearchSubmit();
+      }
+    });
+
+    inputElement.addEventListener("search", function (event) {
+      event.preventDefault();
+      handleSearchSubmit();
+    });
+  }
+
   function bindEvents() {
     setSearchMode("tag");
 
@@ -178,21 +205,39 @@
     if (form) {
       form.addEventListener("submit", function (event) {
         event.preventDefault();
-
-        if (currentMode === "tag") {
-          searchByTagCode();
-          return;
-        }
-
-        setInfoMessage("Order search is not ready yet.", true);
+        handleSearchSubmit();
       });
     }
+
+    bindEnterSearch(inputTag);
+    bindEnterSearch(inputOrder);
 
     document.addEventListener("keyup", function (event) {
       if (event.key === "Escape" || event.keyCode === 27) {
         closeSearch();
       }
     });
+
+    document.addEventListener(
+      "keydown",
+      function (event) {
+        if (event.key !== "Enter" && event.keyCode !== 13) {
+          return;
+        }
+        if (!panel || !panel.classList.contains("is-open")) {
+          return;
+        }
+
+        var active = document.activeElement;
+        if (active !== inputTag && active !== inputOrder) {
+          return;
+        }
+
+        event.preventDefault();
+        handleSearchSubmit();
+      },
+      true
+    );
   }
 
   bindEvents();
