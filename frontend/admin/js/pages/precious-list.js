@@ -1,4 +1,5 @@
 window.preciousListData = [];
+let preciousInfoQuill = null;
 
 const PRECIOUS_INDEX = {
   ID: 0,
@@ -17,9 +18,118 @@ const PRECIOUS_INDEX = {
 
 window.addEventListener("DOMContentLoaded", function () {
   Promise.all([initializePreciousMetaOptions(), fetchAndRenderPreciousList()]).finally(function () {
+    initializePreciousInfoEditor();
     addEventListenerAfterDOMLoaded();
   });
 });
+
+function initializePreciousInfoEditor() {
+  if (preciousInfoQuill || typeof Quill !== "function") {
+    return;
+  }
+
+  const editorContainer = document.getElementById("precious-info-desc");
+  if (!editorContainer) {
+    return;
+  }
+
+  preciousInfoQuill = new Quill("#precious-info-desc", {
+    theme: "snow",
+    modules: {
+      toolbar: [
+        [{ font: [] }, { size: [] }],
+        ["bold", "italic", "underline", "strike"],
+        [{ color: [] }, { background: [] }],
+        [{ script: "super" }, { script: "sub" }],
+        [{ header: [false, 1, 2, 3, 4, 5, 6] }, "blockquote", "code-block"],
+        [
+          { list: "ordered" },
+          { list: "bullet" },
+          { indent: "-1" },
+          { indent: "+1" },
+        ],
+        ["direction", { align: [] }],
+        ["link", "image", "video"],
+        ["clean"],
+      ],
+    },
+  });
+}
+
+function setPreciousInfoDescValue(desc) {
+  initializePreciousInfoEditor();
+  if (!preciousInfoQuill) {
+    return;
+  }
+
+  if (desc == null) {
+    preciousInfoQuill.setText("");
+    return;
+  }
+
+  if (typeof desc === "string") {
+    preciousInfoQuill.clipboard.dangerouslyPasteHTML(desc);
+    return;
+  }
+
+  if (typeof desc === "object" && Array.isArray(desc.ops)) {
+    preciousInfoQuill.setContents(desc);
+    return;
+  }
+
+  preciousInfoQuill.setText(JSON.stringify(desc, null, 2));
+}
+
+function fillPreciousInfoModalFromList(result) {
+  if (!result || result.length < 11) {
+    return;
+  }
+
+  document.getElementById("precious-info-id").value = result[PRECIOUS_INDEX.ID] ?? "";
+  document.getElementById("precious-info-code").value = result[PRECIOUS_INDEX.ITEM_ID] ?? "";
+  document.getElementById("precious-info-name").value = result[PRECIOUS_INDEX.TITLE] ?? "";
+  document.getElementById("precious-info-price").value = result[PRECIOUS_INDEX.PRICE] ?? "";
+  document.getElementById("precious-info-type").value = result[PRECIOUS_INDEX.TYPE] ?? "";
+  document.getElementById("precious-info-tag").value = result[PRECIOUS_INDEX.TAG] ?? "";
+  document.getElementById("precious-info-picture-url").value = result[PRECIOUS_INDEX.PIC_URL] ?? "";
+  setPreciousInfoDescValue(null);
+}
+
+function fillPreciousInfoModal(info) {
+  if (!info) {
+    return;
+  }
+
+  document.getElementById("precious-info-id").value = info.precious_id ?? "";
+  document.getElementById("precious-info-code").value = info.precious_code ?? "";
+  document.getElementById("precious-info-name").value = info.precious_name ?? "";
+  document.getElementById("precious-info-type").value = info.precious_type ?? "";
+  document.getElementById("precious-info-tag").value = info.precious_tag ?? "";
+
+  const officialPrice =
+    typeof info.precious_official_price === "number" ? info.precious_official_price : "";
+  document.getElementById("precious-info-price").value = officialPrice;
+
+  const pictures = Array.isArray(info.precious_pictures) ? info.precious_pictures : [];
+  document.getElementById("precious-info-picture-url").value = pictures[0] || "";
+
+  setPreciousInfoDescValue(info.precious_desc);
+}
+
+function fetchPreciousInfoByPreciousID(preciousID) {
+  return fetch(`/api/precious/info?precious_id=${encodeURIComponent(preciousID)}`, {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (!data || !data.success) {
+        throw new Error((data && data.message) || "Failed to load precious info");
+      }
+      return data.data;
+    });
+}
 
 function initializePreciousMetaOptions() {
   return fetch("/api/precious/meta", {
@@ -394,6 +504,29 @@ function addEventListenerAfterDOMLoaded() {
     const id = parseInt(editBtn.getAttribute("data-id"), 10);
     const result = preciousListData.find((row) => row[PRECIOUS_INDEX.ID] === id);
     fillEditForm(result);
+  });
+
+  document.getElementById("table-gridjs").addEventListener("click", (e) => {
+    const infoBtn = e.target.closest(".table-edit-precious-info-btn");
+    if (!infoBtn) {
+      return;
+    }
+
+    const id = parseInt(infoBtn.getAttribute("data-id"), 10);
+    if (!Number.isInteger(id) || id <= 0) {
+      return;
+    }
+
+    const result = preciousListData.find((row) => row[PRECIOUS_INDEX.ID] === id);
+    fillPreciousInfoModalFromList(result);
+
+    fetchPreciousInfoByPreciousID(id)
+      .then((info) => {
+        fillPreciousInfoModal(info);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch precious info", err);
+      });
   });
 
   document.getElementById("save-precious-btn").addEventListener("click", () => {

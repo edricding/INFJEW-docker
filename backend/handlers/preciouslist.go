@@ -7,6 +7,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"INFJEW/backend/db"
@@ -24,6 +25,20 @@ type PreciousItem struct {
 	Status   int    `json:"status"`
 	URL      string `json:"url"`
 	PicURL   string `json:"picurl"`
+}
+
+type PreciousInfoItem struct {
+	ID                   int         `json:"id"`
+	PreciousID           int         `json:"precious_id"`
+	PreciousCode         string      `json:"precious_code"`
+	PreciousName         string      `json:"precious_name"`
+	PreciousPictures     []string    `json:"precious_pictures"`
+	PreciousMaterials    string      `json:"precious_materials"`
+	PreciousType         string      `json:"precious_type"`
+	PreciousTag          string      `json:"precious_tag"`
+	PreciousDesc         interface{} `json:"precious_desc"`
+	PreciousOfficialPrice *float64   `json:"precious_official_price"`
+	PreciousInfoFilled   int         `json:"precious_info_filled"`
 }
 
 type preciousItemPayload struct {
@@ -130,6 +145,113 @@ func loadPreciousItems() ([]PreciousItem, error) {
 	return items, nil
 }
 
+func parseJSONPictures(raw []byte) []string {
+	if len(raw) == 0 {
+		return []string{}
+	}
+
+	var pictures []string
+	if err := json.Unmarshal(raw, &pictures); err == nil {
+		return pictures
+	}
+
+	var genericPictures []interface{}
+	if err := json.Unmarshal(raw, &genericPictures); err == nil {
+		normalized := make([]string, 0, len(genericPictures))
+		for _, value := range genericPictures {
+			if str, ok := value.(string); ok {
+				normalized = append(normalized, str)
+			}
+		}
+		return normalized
+	}
+
+	return []string{}
+}
+
+func parseJSONValue(raw []byte) interface{} {
+	if len(raw) == 0 {
+		return nil
+	}
+
+	var parsed interface{}
+	if err := json.Unmarshal(raw, &parsed); err != nil {
+		return string(raw)
+	}
+
+	return parsed
+}
+
+func loadPreciousInfoByPreciousID(preciousID int) (*PreciousInfoItem, error) {
+	row := db.DB.QueryRow(`
+		SELECT
+			id,
+			precious_id,
+			precious_code,
+			precious_name,
+			precious_pictures,
+			precious_materials,
+			precious_type,
+			precious_tag,
+			precious_desc,
+			precious_official_price,
+			precious_info_filled
+		FROM preciousInfo
+		WHERE precious_id = ?
+		LIMIT 1
+	`, preciousID)
+
+	var item PreciousInfoItem
+	var code, name, materials, preciousType, tag sql.NullString
+	var picturesRaw, descRaw []byte
+	var officialPrice sql.NullFloat64
+
+	if err := row.Scan(
+		&item.ID,
+		&item.PreciousID,
+		&code,
+		&name,
+		&picturesRaw,
+		&materials,
+		&preciousType,
+		&tag,
+		&descRaw,
+		&officialPrice,
+		&item.PreciousInfoFilled,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	if code.Valid {
+		item.PreciousCode = strings.TrimSpace(code.String)
+	}
+	if name.Valid {
+		item.PreciousName = strings.TrimSpace(name.String)
+	}
+	if materials.Valid {
+		item.PreciousMaterials = strings.TrimSpace(materials.String)
+	}
+	if preciousType.Valid {
+		item.PreciousType = strings.TrimSpace(preciousType.String)
+	}
+	if tag.Valid {
+		item.PreciousTag = strings.TrimSpace(tag.String)
+	}
+
+	item.PreciousPictures = parseJSONPictures(picturesRaw)
+	item.PreciousDesc = parseJSONValue(descRaw)
+
+	if officialPrice.Valid {
+		price := officialPrice.Float64
+		item.PreciousOfficialPrice = &price
+	}
+
+	return &item, nil
+}
+
 func loadStringList(query string) ([]string, error) {
 	rows, err := db.DB.Query(query)
 	if err != nil {
@@ -232,6 +354,50 @@ func validateCreatePayload(payload preciousItemPayload) (preciousItemPayload, er
 	payload.Rating = normalizedRating
 
 	return payload, nil
+}
+
+// GetPreciousInfoHandler returns one preciousInfo row by precious_id.
+func GetPreciousInfoHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]interface{}{
+			"success": false,
+			"message": "Method Not Allowed",
+		})
+		return
+	}
+
+	preciousIDRaw := strings.TrimSpace(r.URL.Query().Get("precious_id"))
+	preciousID, err := strconv.Atoi(preciousIDRaw)
+	if err != nil || preciousID <= 0 {
+		writeJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"success": false,
+			"message": "Invalid precious_id",
+		})
+		return
+	}
+
+	item, err := loadPreciousInfoByPreciousID(preciousID)
+	if err != nil {
+		log.Printf("failed to query preciousInfo by precious_id=%d: %v", preciousID, err)
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"success": false,
+			"message": "Database query failed",
+		})
+		return
+	}
+
+	if item == nil {
+		writeJSON(w, http.StatusNotFound, map[string]interface{}{
+			"success": false,
+			"message": "Precious info not found",
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"success": true,
+		"data":    item,
+	})
 }
 
 func validateUpdatePayload(payload preciousItemPayload) (preciousItemPayload, error) {
