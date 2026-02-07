@@ -114,18 +114,28 @@
           </li>
 
           <li class="side-nav-title mt-2">Store</li>
+
           <li class="side-nav-item">
-            <a href="https://store.infjew.com" class="side-nav-link">
+            <a data-bs-toggle="collapse" href="#sidebarStore" aria-expanded="false" aria-controls="sidebarEcommerce"
+              class="side-nav-link">
               <span class="menu-icon"><i class="ti ti-building-store"></i></span>
-              <span class="menu-text"> Store Page </span>
+              <span class="menu-text"> Store </span>
+              <span class="menu-arrow"></span>
             </a>
-          </li>
-          <li class="side-nav-item">
-            <a href="https://admin.shopify.com/store/bk0ft5-jm?ui_locales=en" class="side-nav-link">
-              <span class="menu-icon"><i class="ti ti-brand-shopee"></i></span>
-              <span class="menu-text"> Shopify Dashboard </span>
-              <span class="badge bg-infjew rounded-pill">S</span>
-            </a>
+            <div class="collapse" id="sidebarStore">
+              <ul class="sub-menu">
+                <li class="side-nav-item">
+                  <a href="https://store.infjew.com" class="side-nav-link">
+                    <span class="menu-text">My Store</span>
+                  </a>
+                </li>
+                <li class="side-nav-item">
+                  <a href="https://admin.shopify.com/store/bk0ft5-jm?ui_locales=en" class="side-nav-link">
+                    <span class="menu-text">Shopify</span><span class="badge bg-infjew rounded-pill">S</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
           </li>
         </ul>
 
@@ -139,7 +149,7 @@
       <div class="page-container topbar-menu">
         <div class="d-flex align-items-center gap-2">
           <!-- Sidebar Menu Toggle Button -->
-          <button class="sidenav-toggle-button btn btn-primary btn-icon">
+          <button class="sidenav-toggle-button btn btn-infjew btn-icon">
             <i class="ti ti-menu-deep fs-24"></i>
           </button>
         </div>
