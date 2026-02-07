@@ -15,9 +15,6 @@
 
 <!-- Theme Config Js -->
 <script src="../js/config.js"></script>
-<script>
-    document.documentElement.classList.add("js");
-</script>
 
 <!-- Vendor css -->
 <link href="../css/vendor.min.css" rel="stylesheet" type="text/css" />
@@ -34,21 +31,26 @@
 <link href="search.css" rel="stylesheet" type="text/css" />
 </head>
 
-<body>
+<body class="verify-effect-ready">
 
-    <div class="search" id="verify-search-section">
-        <button id="btn-search-close" class="btn btn--search-close" aria-label="Close search form">
+    <div class="verify-search-panel" id="verify-search-panel">
+        <button id="verify-search-close-btn" class="btn verify-search-panel__close" aria-label="Close search form">
             <i class="ti ti-x fs-30"></i>
         </button>
-        <form class="search__form" action="">
-            <input class="search__input" name="search" type="search" placeholder="Search" autocomplete="off"
+        <form class="verify-search-panel__form" action="">
+            <input class="verify-search-panel__input" name="search" type="search" placeholder="Search" autocomplete="off"
                 autocorrect="off" autocapitalize="off" spellcheck="false" id="verify-search-input"/>
-            <span class="search__info">Hit enter to search or ESC to close</span>
+            <span class="verify-search-panel__info" id="verify-search-info">Hit enter to search or ESC to close</span>
         </form>
-    </div><!-- /search -->
+    </div>
 
     <!-- Begin page -->
-    <div class="wrapper main-wrap" id="verify-main-section">
+    <div class="verify-card-stack" id="verify-card-stack">
+        <div class="verify-card-stack__sheet verify-card-stack__sheet--dummy"></div>
+        <div class="verify-card-stack__sheet verify-card-stack__sheet--dummy"></div>
+        <div class="verify-card-stack__sheet verify-card-stack__sheet--dummy"></div>
+        <div class="verify-card-stack__sheet verify-card-stack__sheet--content">
+            <div class="wrapper main-wrap" id="verify-main-section">
 
 
         <!-- Topbar Start -->
@@ -523,8 +525,10 @@
 
 
 
+            </div>
+            <!-- END wrapper -->
+        </div>
     </div>
-    <!-- END wrapper -->
 
     <!-- Vendor js -->
     <script src="/js/vendor.min.js"></script>

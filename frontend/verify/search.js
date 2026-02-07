@@ -1,59 +1,81 @@
 ;(function (window) {
   "use strict";
 
-  var mainContainer = document.getElementById("verify-main-section");
-  var tagOpenCtrl = document.getElementById("go-verify-tag-btn");
-  var orderOpenCtrl = document.getElementById("go-verify-order-btn");
-  var closeCtrl = document.getElementById("btn-search-close");
-  var searchContainer = document.getElementById("verify-search-section");
-  var searchForm = document.querySelector("#verify-search-section .search__form");
-  var inputSearch = document.getElementById("verify-search-input");
-  var searchInfo = document.querySelector("#verify-search-section .search__info");
+  var stage = document.getElementById("verify-card-stack");
+  var panel = document.getElementById("verify-search-panel");
+  var form = panel ? panel.querySelector(".verify-search-panel__form") : null;
+  var input = document.getElementById("verify-search-input");
+  var info = document.getElementById("verify-search-info");
+  var openTagBtn = document.getElementById("go-verify-tag-btn");
+  var openOrderBtn = document.getElementById("go-verify-order-btn");
+  var closeBtn = document.getElementById("verify-search-close-btn");
 
-  function openSearch(mode) {
-    if (!mainContainer || !searchContainer || !inputSearch) {
+  function setSearchMode(mode) {
+    if (!input || !info) {
       return;
     }
 
-    var isTagMode = mode === "tag";
-    if (searchInfo) {
-      searchInfo.textContent = isTagMode
-        ? "Hit enter to search tag or ESC to close"
-        : "Hit enter to search order or ESC to close";
+    if (mode === "tag") {
+      input.placeholder = "Find by tag code...";
+      info.textContent = "Hit enter to search tag code or ESC to close";
+      return;
     }
-    inputSearch.placeholder = isTagMode ? "Search tag code" : "Search order code";
 
-    mainContainer.classList.add("main-wrap--move");
-    searchContainer.classList.add("search--open");
-    inputSearch.focus();
+    input.placeholder = "Find by order code...";
+    info.textContent = "Hit enter to search order code or ESC to close";
+  }
+
+  function openSearch(mode) {
+    if (!stage || !panel || !input) {
+      return;
+    }
+
+    setSearchMode(mode);
+    stage.classList.add("is-shifted");
+    panel.classList.add("is-open");
+    input.focus();
   }
 
   function closeSearch() {
-    if (!mainContainer || !searchContainer || !inputSearch) {
+    if (!stage || !panel || !input) {
       return;
     }
 
-    mainContainer.classList.remove("main-wrap--move");
-    searchContainer.classList.remove("search--open");
-    inputSearch.blur();
-    inputSearch.value = "";
+    stage.classList.remove("is-shifted");
+    panel.classList.remove("is-open");
+    input.blur();
+    input.value = "";
   }
 
-  function initEvents() {
-    if (tagOpenCtrl) {
-      tagOpenCtrl.addEventListener("click", function () {
+  function bindEvents() {
+    if (openTagBtn) {
+      openTagBtn.addEventListener("click", function () {
         openSearch("tag");
       });
     }
 
-    if (orderOpenCtrl) {
-      orderOpenCtrl.addEventListener("click", function () {
+    if (openOrderBtn) {
+      openOrderBtn.addEventListener("click", function () {
         openSearch("order");
       });
     }
 
-    if (closeCtrl) {
-      closeCtrl.addEventListener("click", closeSearch);
+    if (closeBtn) {
+      closeBtn.addEventListener("click", closeSearch);
+    }
+
+    if (panel && form) {
+      panel.addEventListener("click", function (event) {
+        if (!form.contains(event.target)) {
+          closeSearch();
+        }
+      });
+    }
+
+    if (form) {
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+      });
     }
 
     document.addEventListener("keyup", function (event) {
@@ -61,21 +83,7 @@
         closeSearch();
       }
     });
-
-    if (searchContainer && searchForm) {
-      searchContainer.addEventListener("click", function (event) {
-        if (!searchForm.contains(event.target) && event.target !== tagOpenCtrl && event.target !== orderOpenCtrl) {
-          closeSearch();
-        }
-      });
-    }
-
-    if (searchForm) {
-      searchForm.addEventListener("submit", function (event) {
-        event.preventDefault();
-      });
-    }
   }
 
-  initEvents();
+  bindEvents();
 })(window);
