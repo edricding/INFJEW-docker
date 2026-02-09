@@ -19,9 +19,9 @@
   var isTagSearching = false;
 
   var TAG_CODE_PATTERN = /^INF-[A-Z]\d{2}-[A-Z]\d{2}$/;
-  var ORDER_CODE_PATTERN = /^INF-ORDER-[A-Z]\d{6}$/;
+  var ORDER_CODE_PATTERN = /^INFO-[A-Z]\d{6}$/;
   var TAG_CODE_FORMAT = "INF-A00-A00";
-  var ORDER_CODE_FORMAT = "INF-ORDER-A000000";
+  var ORDER_CODE_FORMAT = "INFO-A000000";
 
   var TAG_INPUT_CONFIG = {
     prefix: "INF-",
@@ -32,11 +32,11 @@
   };
 
   var ORDER_INPUT_CONFIG = {
-    prefix: "INF-ORDER-",
-    prefixSeed: "INFORDER",
+    prefix: "INFO-",
+    prefixSeed: "INFO",
     slots: "A999999",
     splitIndex: 0,
-    displayLength: 17,
+    displayLength: 12,
   };
 
   function sanitizeAlphaNumericUpper(value) {
