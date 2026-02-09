@@ -1,3 +1,81 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.iml
+*.suo
+*.user
+*.userossc
+*.sln.docstates
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build and cache outputs
+dist/
+build/
+out/
+tmp/
+temp/
+.cache/
+coverage/
+*.tsbuildinfo
+
+# Environment and local config
+.env
+.env.*
+*.env
+env
+env/
+.envrc
+env.example
+env-example
+env.example/
+env-example/
+.env.example
+.env-example
+*.env.example
+*.env-example
+
+# Secrets and certificates
+*.pem
+*.key
+*.p12
+*.crt
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.rar
+
+# Design source files
+*.ai
+*.eps
+*.psd
+*.xd
+*.sketch
+*.fig
+
+# Optional project-specific ignores
 #frontend/css/
 #frontend/js/
 #frontend/images/
