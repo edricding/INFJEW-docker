@@ -16,6 +16,189 @@
   var currentMode = "tag";
   var isTagSearching = false;
 
+  var TAG_CODE_PATTERN = /^INF-[A-Z]\d{2}-[A-Z]\d{2}$/;
+  var ORDER_CODE_PATTERN = /^INF-ORDER-[A-Z]\d{6}$/;
+  var TAG_CODE_FORMAT = "INF-A00-A00";
+  var ORDER_CODE_FORMAT = "INF-ORDER-A000000";
+
+  var TAG_INPUT_CONFIG = {
+    prefix: "INF-",
+    prefixSeed: "INF",
+    slots: "A99A99",
+    splitIndex: 3,
+    maxDisplayLength: 11,
+  };
+
+  var ORDER_INPUT_CONFIG = {
+    prefix: "INF-ORDER-",
+    prefixSeed: "INFORDER",
+    slots: "A999999",
+    splitIndex: 0,
+    maxDisplayLength: 17,
+  };
+
+  function sanitizeAlphaNumericUpper(value) {
+    return String(value || "")
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "");
+  }
+
+  function matchesSlot(character, slotType) {
+    if (slotType === "A") {
+      return /^[A-Z]$/.test(character);
+    }
+    if (slotType === "9") {
+      return /^\d$/.test(character);
+    }
+    return false;
+  }
+
+  function extractRawCode(value, config) {
+    var cleanedValue = sanitizeAlphaNumericUpper(value);
+
+    if (
+      config.prefixSeed &&
+      cleanedValue.indexOf(config.prefixSeed) === 0
+    ) {
+      cleanedValue = cleanedValue.slice(config.prefixSeed.length);
+    }
+
+    var raw = "";
+    for (var i = 0; i < cleanedValue.length; i += 1) {
+      if (raw.length >= config.slots.length) {
+        break;
+      }
+
+      var character = cleanedValue.charAt(i);
+      var expectedSlot = config.slots.charAt(raw.length);
+
+      if (matchesSlot(character, expectedSlot)) {
+        raw += character;
+      } else {
+        break;
+      }
+    }
+
+    return raw;
+  }
+
+  function formatCode(raw, config) {
+    if (!raw) {
+      return "";
+    }
+
+    if (!config.splitIndex || raw.length <= config.splitIndex) {
+      return config.prefix + raw;
+    }
+
+    return (
+      config.prefix +
+      raw.slice(0, config.splitIndex) +
+      "-" +
+      raw.slice(config.splitIndex)
+    );
+  }
+
+  function normalizeCodeValue(value, config) {
+    var raw = extractRawCode(value, config);
+    return {
+      raw: raw,
+      display: formatCode(raw, config),
+    };
+  }
+
+  function moveCursorToEnd(inputElement) {
+    if (
+      !inputElement ||
+      typeof inputElement.setSelectionRange !== "function"
+    ) {
+      return;
+    }
+
+    var cursor = inputElement.value.length;
+    try {
+      inputElement.setSelectionRange(cursor, cursor);
+    } catch (error) {
+      // Ignore unsupported selection APIs.
+    }
+  }
+
+  function bindStrictCodeInput(inputElement, config) {
+    if (!inputElement) {
+      return;
+    }
+
+    var isComposing = false;
+
+    function syncInputValue() {
+      var normalized = normalizeCodeValue(inputElement.value, config);
+      if (inputElement.value !== normalized.display) {
+        inputElement.value = normalized.display;
+      }
+      moveCursorToEnd(inputElement);
+    }
+
+    inputElement.setAttribute("maxlength", String(config.maxDisplayLength));
+
+    inputElement.addEventListener("focus", function () {
+      window.setTimeout(function () {
+        moveCursorToEnd(inputElement);
+      }, 0);
+    });
+
+    inputElement.addEventListener("click", function () {
+      moveCursorToEnd(inputElement);
+    });
+
+    inputElement.addEventListener("compositionstart", function () {
+      isComposing = true;
+    });
+
+    inputElement.addEventListener("compositionend", function () {
+      isComposing = false;
+      syncInputValue();
+    });
+
+    inputElement.addEventListener("beforeinput", function (event) {
+      if (isComposing || !event) {
+        return;
+      }
+
+      if (event.inputType && event.inputType.indexOf("delete") === 0) {
+        return;
+      }
+
+      if (typeof event.data !== "string" || event.data.length !== 1) {
+        return;
+      }
+
+      var nextCharacter = sanitizeAlphaNumericUpper(event.data);
+      if (nextCharacter.length !== 1) {
+        event.preventDefault();
+        return;
+      }
+
+      var currentRawLength = normalizeCodeValue(
+        inputElement.value,
+        config
+      ).raw.length;
+      var expectedSlot = config.slots.charAt(currentRawLength);
+
+      if (!expectedSlot || !matchesSlot(nextCharacter, expectedSlot)) {
+        event.preventDefault();
+      }
+    });
+
+    inputElement.addEventListener("input", function () {
+      if (isComposing) {
+        return;
+      }
+      syncInputValue();
+    });
+
+    syncInputValue();
+  }
+
   function setScrollLock(isLocked) {
     if (!root || !body) {
       return;
@@ -127,6 +310,11 @@
       return;
     }
 
+    if (!TAG_CODE_PATTERN.test(tagCode)) {
+      setInfoMessage("Invalid format. Use " + TAG_CODE_FORMAT + ".", true);
+      return;
+    }
+
     setInfoMessage("Searching...", false);
     isTagSearching = true;
 
@@ -157,9 +345,32 @@
       });
   }
 
+  function validateOrderCode() {
+    if (!inputOrder) {
+      return false;
+    }
+
+    var orderCode = inputOrder.value.trim();
+    if (orderCode === "") {
+      setInfoMessage("Please enter an order code.", true);
+      return false;
+    }
+
+    if (!ORDER_CODE_PATTERN.test(orderCode)) {
+      setInfoMessage("Invalid format. Use " + ORDER_CODE_FORMAT + ".", true);
+      return false;
+    }
+
+    return true;
+  }
+
   function handleSearchSubmit() {
     if (currentMode === "tag") {
       searchByTagCode();
+      return;
+    }
+
+    if (!validateOrderCode()) {
       return;
     }
 
@@ -181,6 +392,8 @@
 
   function bindEvents() {
     setSearchMode("tag");
+    bindStrictCodeInput(inputTag, TAG_INPUT_CONFIG);
+    bindStrictCodeInput(inputOrder, ORDER_INPUT_CONFIG);
 
     if (openTagBtn) {
       openTagBtn.addEventListener("click", function () {
