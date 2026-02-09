@@ -48,7 +48,7 @@
                 autocorrect="off" autocapitalize="characters" spellcheck="false" id="verify-search-input-order"/>
                 <span class="verify-search-panel__info verify-info-order verify-search-panel_eg mb-1 d-none">e.g. INFO-X000000</span>
             <span class="verify-search-panel__info verify-info-order mt-2 mb-1 d-none" id="verify-search-info-order">Please insert your order number</span>
-            <span class="verify-search-panel__info verify-info-order mt-2 mb-1 d-none" id="verify-search-info-order">Hit enter to search order code or ESC to close</span>
+            <span class="verify-search-panel__info verify-info-order d-none" id="verify-search-info-order">Hit enter to search order code or ESC to close</span>
         </form>
     </div>
 
@@ -203,46 +203,12 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-xl-3 col-lg-6">
-                        <div class="card placeholder-glow">
-                            <div class="card-body">
-                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                                    <div
-                                        class="avatar-lg bg-light d-flex align-items-center justify-content-center rounded  flex-shrink-0">
-                                        <img src="../admin/images/cards/mastercard.svg" alt="Card Img"
-                                            class="img-fluid">
-                                    </div>
-                                    <div>
-                                        <p class="text-dark fw-medium fs-16 mb-1">Master Card</p>
-                                        <p class="mb-0">**** **** **** 3541 </p>
-                                    </div>
-                                    <div class="ms-auto">
-                                        <span
-                                            class="badge bg-success-subtle rounded-pill text-success border border-success fs-11 py-1 px-2  my-2">Paid</span>
-                                    </div>
-                                </div>
-                                <div class="d-flex flex-wrap align-items-center justify-content-between mt-5 pt-1">
-                                    <div>
-                                        <p class="fs-15 fw-medium mb-0 text-muted mb-1">Transaction ID</p>
-                                        <p class="text-dark fw-semibold mb-0 fs-16">TR626788-MR</p>
-                                    </div>
-                                    <div>
-                                        <p class="fs-15 fw-medium mb-0 text-muted mb-1">Payment Method</p>
-                                        <p class="text-dark fw-semibold mb-0 fs-16">Master Card</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    
                     <div class="col-xl-6 col-lg-12">
                         <div class="card placeholder-glow">
                             <div class="card-body">
-                                <div
-                                    class="avatar-lg bg-light d-flex align-items-center justify-content-center rounded">
-                                    <iconify-icon icon="solar:scooter-bold-duotone"
-                                        class="fs-32 text-primary"></iconify-icon>
-                                </div>
-                                <p class="my-3 text-dark fs-20 text-dark fw-medium">Be patient, package on deliver!</p>
+                                
+                                <p class="text-dark fs-20 text-dark fw-medium">Be patient, package on deliver!</p>
                                 <div
                                     class="d-flex flex-wrap align-items-center mt-3 mb-2 justify-content-between gap-2">
                                     <div>
@@ -364,59 +330,11 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-xl-4 col-lg-12">
-                        <div class="card placeholder-glow">
-                            <div class="card-header border-bottom">
-                                <h5 class="card-title mb-0">Purchase Summary</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table mb-0 table-borderless">
-                                        <tbody>
-                                            <tr>
-                                                <td class="px-0">
-                                                    <p class="mb-0 fs-15 fw-medium"> Sub Total : </p>
-                                                </td>
-                                                <td class="text-end text-dark fs-14 fw-medium px-0">$1001.8</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="px-0">
-                                                    <p class="mb-0 fs-15 fw-medium">Discount : </p>
-                                                </td>
-                                                <td class="text-end text-dark fs-14 fw-medium px-0">-$120.00</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="px-0">
-                                                    <p class="mb-0 fs-15 fw-medium">Delivery Charge : </p>
-                                                </td>
-                                                <td class="text-end text-success fs-14 fw-medium px-0">Free</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="px-0">
-                                                    <p class="mb-0 fs-15 fw-medium">Estimated Tax (18.5%) : </p>
-                                                </td>
-                                                <td class="text-end text-dark fs-14 fw-medium px-0">$30.00</td>
-                                            </tr>
-
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            <div class="card-footer d-flex align-items-center justify-content-between border-top">
-                                <div>
-                                    <p class="fw-medium text-dark mb-0 fs-15">Grand Amount</p>
-                                </div>
-                                <div>
-                                    <p class="fw-medium fs-14 text-dark mb-0">$911.8</p>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
+                    
                 </div>
 
                 <div class="row">
-                    <div class="col-xl-8 col-lg-12">
+                    <div class="col-12">
                         <div class="card placeholder-glow">
                             <div class="card-header border-bottom">
                                 <h5 class="mb-0 card-title">Order Items</h5>
