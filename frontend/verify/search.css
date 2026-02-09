@@ -190,3 +190,8 @@ body.verify-scroll-locked {
     font-size: 1.25em;
   }
 }
+
+
+.border-bottom-black-1{
+  border-bottom: 1px solid #000000;
+}
