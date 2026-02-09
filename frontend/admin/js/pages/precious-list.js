@@ -327,6 +327,57 @@ function clearPreciousForm() {
   document.getElementById("edit-rating-select").selectedIndex = 0;
 }
 
+function clearAddPreciousForm() {
+  document.getElementById("add-precious-id").value = "";
+  document.getElementById("add-precious-title").value = "";
+  document.getElementById("add-precious-price").value = "";
+  document.getElementById("add-precious-discount").value = "";
+  document.getElementById("add-precious-url").value = "";
+  document.getElementById("add-precious-picture-url").value = "";
+
+  document.querySelectorAll('input[name="add-statusRadio"]').forEach((radio) => {
+    radio.checked = false;
+    radio.removeAttribute("checked");
+  });
+
+  const defaultStatusRadio = document.getElementById("add-statusRadio1");
+  if (defaultStatusRadio) {
+    defaultStatusRadio.checked = true;
+    defaultStatusRadio.setAttribute("checked", "checked");
+  }
+
+  const discountInput = document.getElementById("add-precious-discount");
+  if (discountInput) {
+    discountInput.disabled = true;
+  }
+
+  document.getElementById("add-rating-select").value = "5.0";
+
+  const addTypeSelect = document.getElementById("add-precious-type");
+  if (addTypeSelect) {
+    addTypeSelect.selectedIndex = 0;
+  }
+
+  const addTagSelect = document.getElementById("add-precious-tag");
+  if (addTagSelect) {
+    addTagSelect.selectedIndex = 0;
+  }
+}
+
+function hideModalById(modalId) {
+  const modalElement = document.getElementById(modalId);
+  if (!modalElement || !window.bootstrap || !window.bootstrap.Modal) {
+    return;
+  }
+
+  const modalInstance =
+    bootstrap.Modal.getInstance(modalElement) ||
+    bootstrap.Modal.getOrCreateInstance(modalElement);
+  if (modalInstance) {
+    modalInstance.hide();
+  }
+}
+
 function fetchAndRenderPreciousList() {
   return fetch("/api/preciouslist", {
     method: "GET",
@@ -563,7 +614,26 @@ function addEventListenerAfterDOMLoaded() {
       picurl: preciousData.picurl,
     };
 
-    AddPreciousList(dataToSend);
+    AddPreciousList(dataToSend)
+      .then(() => {
+        hideModalById("AddPreciousModal");
+        clearAddPreciousForm();
+        Swal.fire({
+          title: "Added",
+          text: "Precious has been added.",
+          icon: "success",
+          timer: 1200,
+          showConfirmButton: false,
+        });
+      })
+      .catch((error) => {
+        console.error("Create precious failed", error);
+        Swal.fire({
+          title: "Add Failed",
+          text: error && error.message ? error.message : "Please try again.",
+          icon: "error",
+        });
+      });
   });
 
   document.getElementById("close-save-precious-btn").addEventListener("click", () => {
@@ -667,12 +737,10 @@ function addEventListenerAfterDOMLoaded() {
           }
 
           fillPreciousInfoModal(result.data);
-
-          const infoModalElement = document.getElementById("EditPreciousInfoModal");
-          const infoModalInstance = bootstrap.Modal.getInstance(infoModalElement);
-          if (infoModalInstance) {
-            infoModalInstance.hide();
-          }
+          return fetchAndRenderPreciousList();
+        })
+        .then(() => {
+          hideModalById("EditPreciousInfoModal");
 
           Swal.fire({
             title: "Updated",
@@ -734,7 +802,26 @@ function addEventListenerAfterDOMLoaded() {
       picurl: editPreciousData.picurl,
     };
 
-    UpdatePreciousList(dataToSend);
+    UpdatePreciousList(dataToSend)
+      .then(() => {
+        hideModalById("EditPreciousModal");
+        clearPreciousForm();
+        Swal.fire({
+          title: "Saved",
+          text: "Precious has been updated.",
+          icon: "success",
+          timer: 1200,
+          showConfirmButton: false,
+        });
+      })
+      .catch((error) => {
+        console.error("Update precious failed", error);
+        Swal.fire({
+          title: "Save Failed",
+          text: error && error.message ? error.message : "Please try again.",
+          icon: "error",
+        });
+      });
   });
 
   document.addEventListener("click", (e) => {
@@ -771,7 +858,17 @@ function addEventListenerAfterDOMLoaded() {
         .then((res) => res.json())
         .then((data) => {
           if (data.success) {
-            location.reload();
+            fetchAndRenderPreciousList().then(() => {
+              Swal.fire({
+                title: "Deleted",
+                text: "Precious has been deleted.",
+                icon: "success",
+                timer: 1200,
+                showConfirmButton: false,
+              });
+            }).catch((err) => {
+              console.error("Failed to refresh precious list after delete", err);
+            });
             return;
           }
 
@@ -814,7 +911,7 @@ function formatPreciousListData(data) {
 }
 
 function AddPreciousList(payload) {
-  fetch("/api/preciouslist/create", {
+  return fetch("/api/preciouslist/create", {
     method: "POST",
     credentials: "include",
     headers: {
@@ -825,18 +922,14 @@ function AddPreciousList(payload) {
     .then((response) => response.json())
     .then((result) => {
       if (result.success) {
-        location.reload();
-        return;
+        return fetchAndRenderPreciousList();
       }
-      console.error("Create precious failed", result.message);
-    })
-    .catch((error) => {
-      console.error("Create precious failed", error);
+      throw new Error((result && result.message) || "Create precious failed");
     });
 }
 
 function UpdatePreciousList(payload) {
-  fetch("/api/preciouslist/update", {
+  return fetch("/api/preciouslist/update", {
     method: "POST",
     credentials: "include",
     headers: {
@@ -847,12 +940,8 @@ function UpdatePreciousList(payload) {
     .then((response) => response.json())
     .then((result) => {
       if (result.success) {
-        location.reload();
-        return;
+        return fetchAndRenderPreciousList();
       }
-      console.error("Update precious failed", result.message);
-    })
-    .catch((error) => {
-      console.error("Update precious failed", error);
+      throw new Error((result && result.message) || "Update precious failed");
     });
 }
