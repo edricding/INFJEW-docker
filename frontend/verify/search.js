@@ -8,6 +8,8 @@
   var inputOrder = document.getElementById("verify-search-input-order");
   var infoTag = document.getElementById("verify-search-info-tag");
   var infoOrder = document.getElementById("verify-search-info-order");
+  var infoTagGroup = panel ? panel.querySelectorAll(".verify-info-tag") : [];
+  var infoOrderGroup = panel ? panel.querySelectorAll(".verify-info-order") : [];
   var openTagBtn = document.getElementById("go-verify-tag-btn");
   var openOrderBtn = document.getElementById("go-verify-order-btn");
   var closeBtn = document.getElementById("verify-search-close-btn");
@@ -388,6 +390,16 @@
     element.classList.toggle("d-none", !isVisible);
   }
 
+  function toggleVisibleGroup(elements, isVisible) {
+    if (!elements || !elements.length) {
+      return;
+    }
+
+    for (var i = 0; i < elements.length; i += 1) {
+      toggleVisible(elements[i], isVisible);
+    }
+  }
+
   function getDefaultInfo(mode) {
     if (mode === "tag") {
       return "Hit enter to search tag code or ESC to close";
@@ -414,9 +426,9 @@
     var isTagMode = currentMode === "tag";
 
     toggleVisible(inputTag, isTagMode);
-    toggleVisible(infoTag, isTagMode);
+    toggleVisibleGroup(infoTagGroup, isTagMode);
     toggleVisible(inputOrder, !isTagMode);
-    toggleVisible(infoOrder, !isTagMode);
+    toggleVisibleGroup(infoOrderGroup, !isTagMode);
 
     if (infoTag) {
       infoTag.classList.remove("text-danger");
