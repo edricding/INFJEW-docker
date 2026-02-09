@@ -26,7 +26,7 @@
     prefixSeed: "INF",
     slots: "A99A99",
     splitIndex: 3,
-    maxDisplayLength: 11,
+    displayLength: 11,
   };
 
   var ORDER_INPUT_CONFIG = {
@@ -34,7 +34,7 @@
     prefixSeed: "INFORDER",
     slots: "A999999",
     splitIndex: 0,
-    maxDisplayLength: 17,
+    displayLength: 17,
   };
 
   function sanitizeAlphaNumericUpper(value) {
@@ -99,15 +99,39 @@
     );
   }
 
-  function normalizeCodeValue(value, config) {
-    var raw = extractRawCode(value, config);
-    return {
-      raw: raw,
-      display: formatCode(raw, config),
-    };
+  function formatTemplateCode(raw, config) {
+    var safeRaw = String(raw || "").slice(0, config.slots.length);
+
+    if (!config.splitIndex) {
+      return config.prefix + safeRaw.padEnd(config.slots.length, "_");
+    }
+
+    var firstLength = config.splitIndex;
+    var secondLength = config.slots.length - firstLength;
+    var firstPart = safeRaw.slice(0, firstLength).padEnd(firstLength, "_");
+    var secondPart = safeRaw.slice(firstLength).padEnd(secondLength, "_");
+
+    return config.prefix + firstPart + "-" + secondPart;
   }
 
-  function moveCursorToEnd(inputElement) {
+  function getCursorFromRawLength(rawLength, config) {
+    var safeRawLength = Math.max(
+      0,
+      Math.min(rawLength, config.slots.length)
+    );
+
+    if (!config.splitIndex) {
+      return config.prefix.length + safeRawLength;
+    }
+
+    if (safeRawLength <= config.splitIndex) {
+      return config.prefix.length + safeRawLength;
+    }
+
+    return config.prefix.length + config.splitIndex + 1 + (safeRawLength - config.splitIndex);
+  }
+
+  function moveCursorTo(inputElement, position) {
     if (
       !inputElement ||
       typeof inputElement.setSelectionRange !== "function"
@@ -115,88 +139,236 @@
       return;
     }
 
-    var cursor = inputElement.value.length;
     try {
-      inputElement.setSelectionRange(cursor, cursor);
+      inputElement.setSelectionRange(position, position);
     } catch (error) {
       // Ignore unsupported selection APIs.
     }
   }
 
-  function bindStrictCodeInput(inputElement, config) {
+  function getCodeController(inputElement) {
     if (!inputElement) {
+      return null;
+    }
+    return inputElement.__verifyCodeController || null;
+  }
+
+  function getInputRawLength(inputElement, config) {
+    var controller = getCodeController(inputElement);
+    if (controller && typeof controller.getRaw === "function") {
+      return controller.getRaw().length;
+    }
+    return extractRawCode(inputElement ? inputElement.value : "", config).length;
+  }
+
+  function getInputCode(inputElement, config) {
+    var controller = getCodeController(inputElement);
+    if (controller && typeof controller.getCode === "function") {
+      return controller.getCode();
+    }
+
+    var raw = extractRawCode(inputElement ? inputElement.value : "", config);
+    if (raw.length !== config.slots.length) {
+      return "";
+    }
+
+    return formatCode(raw, config);
+  }
+
+  function resetCodeInput(inputElement) {
+    var controller = getCodeController(inputElement);
+    if (controller && typeof controller.reset === "function") {
+      controller.reset();
       return;
     }
 
-    var isComposing = false;
+    if (inputElement) {
+      inputElement.value = "";
+    }
+  }
 
-    function syncInputValue() {
-      var normalized = normalizeCodeValue(inputElement.value, config);
-      if (inputElement.value !== normalized.display) {
-        inputElement.value = normalized.display;
-      }
-      moveCursorToEnd(inputElement);
+  function bindStrictCodeInput(inputElement, config) {
+    if (!inputElement) {
+      return null;
     }
 
-    inputElement.setAttribute("maxlength", String(config.maxDisplayLength));
+    var isComposing = false;
+    var raw = extractRawCode(inputElement.value, config);
+
+    function render() {
+      inputElement.value = formatTemplateCode(raw, config);
+      inputElement.classList.toggle("text-muted", raw.length === 0);
+      moveCursorTo(inputElement, getCursorFromRawLength(raw.length, config));
+    }
+
+    function appendFromText(text) {
+      var cleanedText = sanitizeAlphaNumericUpper(text);
+
+      if (
+        config.prefixSeed &&
+        cleanedText.indexOf(config.prefixSeed) === 0
+      ) {
+        cleanedText = cleanedText.slice(config.prefixSeed.length);
+      }
+
+      for (var i = 0; i < cleanedText.length; i += 1) {
+        if (raw.length >= config.slots.length) {
+          break;
+        }
+
+        var character = cleanedText.charAt(i);
+        var expectedSlot = config.slots.charAt(raw.length);
+        if (!matchesSlot(character, expectedSlot)) {
+          break;
+        }
+
+        raw += character;
+      }
+    }
+
+    function removeLastCharacter() {
+      if (raw.length > 0) {
+        raw = raw.slice(0, -1);
+      }
+    }
+
+    function syncRawFromInputValue() {
+      var nextRaw = extractRawCode(inputElement.value, config);
+      if (nextRaw !== raw) {
+        raw = nextRaw;
+      }
+    }
+
+    inputElement.setAttribute("maxlength", String(config.displayLength));
 
     inputElement.addEventListener("focus", function () {
       window.setTimeout(function () {
-        moveCursorToEnd(inputElement);
+        moveCursorTo(inputElement, getCursorFromRawLength(raw.length, config));
       }, 0);
     });
 
     inputElement.addEventListener("click", function () {
-      moveCursorToEnd(inputElement);
+      moveCursorTo(inputElement, getCursorFromRawLength(raw.length, config));
+    });
+
+    inputElement.addEventListener("keydown", function (event) {
+      if (!event) {
+        return;
+      }
+
+      if (
+        event.key === "Backspace" ||
+        event.key === "Delete"
+      ) {
+        event.preventDefault();
+        removeLastCharacter();
+        render();
+        return;
+      }
+
+      if (
+        event.key === "ArrowLeft" ||
+        event.key === "ArrowRight" ||
+        event.key === "Home" ||
+        event.key === "End"
+      ) {
+        event.preventDefault();
+        moveCursorTo(inputElement, getCursorFromRawLength(raw.length, config));
+      }
+    });
+
+    inputElement.addEventListener("beforeinput", function (event) {
+      if (!event) {
+        return;
+      }
+
+      var inputType = event.inputType || "";
+      if (inputType.indexOf("delete") === 0) {
+        event.preventDefault();
+        removeLastCharacter();
+        render();
+        return;
+      }
+
+      if (event.isComposing || isComposing) {
+        return;
+      }
+
+      if (inputType === "insertFromPaste") {
+        event.preventDefault();
+        return;
+      }
+
+      if (typeof event.data === "string" && event.data.length > 0) {
+        event.preventDefault();
+        appendFromText(event.data);
+        render();
+        return;
+      }
+
+      if (inputType) {
+        event.preventDefault();
+        render();
+      }
+    });
+
+    inputElement.addEventListener("paste", function (event) {
+      if (!event) {
+        return;
+      }
+
+      event.preventDefault();
+      var clipboardText = "";
+      if (event.clipboardData && typeof event.clipboardData.getData === "function") {
+        clipboardText = event.clipboardData.getData("text");
+      } else if (
+        window.clipboardData &&
+        typeof window.clipboardData.getData === "function"
+      ) {
+        clipboardText = window.clipboardData.getData("Text");
+      }
+      appendFromText(clipboardText);
+      render();
     });
 
     inputElement.addEventListener("compositionstart", function () {
       isComposing = true;
     });
 
-    inputElement.addEventListener("compositionend", function () {
+    inputElement.addEventListener("compositionend", function (event) {
       isComposing = false;
-      syncInputValue();
-    });
-
-    inputElement.addEventListener("beforeinput", function (event) {
-      if (isComposing || !event) {
-        return;
-      }
-
-      if (event.inputType && event.inputType.indexOf("delete") === 0) {
-        return;
-      }
-
-      if (typeof event.data !== "string" || event.data.length !== 1) {
-        return;
-      }
-
-      var nextCharacter = sanitizeAlphaNumericUpper(event.data);
-      if (nextCharacter.length !== 1) {
-        event.preventDefault();
-        return;
-      }
-
-      var currentRawLength = normalizeCodeValue(
-        inputElement.value,
-        config
-      ).raw.length;
-      var expectedSlot = config.slots.charAt(currentRawLength);
-
-      if (!expectedSlot || !matchesSlot(nextCharacter, expectedSlot)) {
-        event.preventDefault();
-      }
+      appendFromText(event && event.data ? event.data : "");
+      render();
     });
 
     inputElement.addEventListener("input", function () {
       if (isComposing) {
         return;
       }
-      syncInputValue();
+
+      syncRawFromInputValue();
+      render();
     });
 
-    syncInputValue();
+    var controller = {
+      reset: function () {
+        raw = "";
+        render();
+      },
+      getRaw: function () {
+        return raw;
+      },
+      getCode: function () {
+        if (raw.length !== config.slots.length) {
+          return "";
+        }
+        return formatCode(raw, config);
+      },
+    };
+
+    inputElement.__verifyCodeController = controller;
+    render();
+    return controller;
   }
 
   function setScrollLock(isLocked) {
@@ -287,11 +459,11 @@
 
     if (inputTag) {
       inputTag.blur();
-      inputTag.value = "";
+      resetCodeInput(inputTag);
     }
     if (inputOrder) {
       inputOrder.blur();
-      inputOrder.value = "";
+      resetCodeInput(inputOrder);
     }
   }
 
@@ -304,9 +476,15 @@
       return;
     }
 
-    var tagCode = inputTag.value.trim();
-    if (tagCode === "") {
-      setInfoMessage("Please enter a tag code.", true);
+    var tagCode = getInputCode(inputTag, TAG_INPUT_CONFIG);
+    var tagRawLength = getInputRawLength(inputTag, TAG_INPUT_CONFIG);
+
+    if (!tagCode) {
+      if (tagRawLength === 0) {
+        setInfoMessage("Please enter a tag code.", true);
+      } else {
+        setInfoMessage("Invalid format. Use " + TAG_CODE_FORMAT + ".", true);
+      }
       return;
     }
 
@@ -350,9 +528,15 @@
       return false;
     }
 
-    var orderCode = inputOrder.value.trim();
-    if (orderCode === "") {
-      setInfoMessage("Please enter an order code.", true);
+    var orderCode = getInputCode(inputOrder, ORDER_INPUT_CONFIG);
+    var orderRawLength = getInputRawLength(inputOrder, ORDER_INPUT_CONFIG);
+
+    if (!orderCode) {
+      if (orderRawLength === 0) {
+        setInfoMessage("Please enter an order code.", true);
+      } else {
+        setInfoMessage("Invalid format. Use " + ORDER_CODE_FORMAT + ".", true);
+      }
       return false;
     }
 
