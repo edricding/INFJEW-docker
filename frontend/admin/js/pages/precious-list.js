@@ -379,16 +379,52 @@ function hideModalById(modalId) {
   }
 }
 
-function parseApiJSON(response, fallbackMessage) {
+function safeJSONStringifyForAlert(value, maxLength) {
+  const limit = typeof maxLength === "number" && maxLength > 0 ? maxLength : 3000;
+  let text = "";
+
+  try {
+    text = JSON.stringify(value, null, 2);
+  } catch (err) {
+    text = String(value);
+  }
+
+  if (typeof text !== "string") {
+    text = String(text);
+  }
+
+  if (text.length <= limit) {
+    return text;
+  }
+
+  return text.slice(0, limit) + "\n... (truncated)";
+}
+
+function parseApiJSON(response, fallbackMessage, debugLabel) {
   const message = fallbackMessage || "Request failed";
   if (!response || !response.ok) {
     const status = response && typeof response.status === "number" ? response.status : "unknown";
     throw new Error(message + " (HTTP " + status + ")");
   }
 
-  return response.json().catch(() => {
-    throw new Error(message + " (Invalid JSON response)");
-  });
+  return response
+    .json()
+    .then((data) => {
+      if (debugLabel) {
+        alert(
+          "[" +
+            debugLabel +
+            "]\nHTTP状态: " +
+            response.status +
+            "\n返回data:\n" +
+            safeJSONStringifyForAlert(data)
+        );
+      }
+      return data;
+    })
+    .catch(() => {
+      throw new Error(message + " (Invalid JSON response)");
+    });
 }
 
 function applyPreciousListData(items) {
@@ -453,6 +489,8 @@ function applyPreciousListResult(result, fallbackMessage) {
   // Invalidate older in-flight list requests so stale responses cannot overwrite new data.
   preciousListRequestSeq += 1;
 
+  alert("我要刷新了");
+  alert("准备渲染的数据:\n" + safeJSONStringifyForAlert(result.data));
   applyPreciousListData(result.data);
   return Promise.resolve(result.data);
 }
@@ -953,7 +991,7 @@ function addEventListenerAfterDOMLoaded() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: id }),
       })
-        .then((res) => parseApiJSON(res, "Delete precious failed"))
+        .then((res) => parseApiJSON(res, "Delete precious failed", "Delete /api/preciouslist/delete"))
         .then((data) => {
           if (!data || !data.success) {
             Swal.fire({
@@ -1019,7 +1057,7 @@ function AddPreciousList(payload) {
     },
     body: JSON.stringify(payload),
   })
-    .then((response) => parseApiJSON(response, "Create precious failed"))
+    .then((response) => parseApiJSON(response, "Create precious failed", "Create /api/preciouslist/create"))
     .then((result) => {
       return applyPreciousListResult(result, "Create precious failed");
     });
@@ -1034,7 +1072,7 @@ function UpdatePreciousList(payload) {
     },
     body: JSON.stringify(payload),
   })
-    .then((response) => parseApiJSON(response, "Update precious failed"))
+    .then((response) => parseApiJSON(response, "Update precious failed", "Update /api/preciouslist/update"))
     .then((result) => {
       return applyPreciousListResult(result, "Update precious failed");
     });
