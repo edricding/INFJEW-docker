@@ -3,92 +3,172 @@ window.countingDown = [];
 const BANNER_TBODY_ID = "index-banner-list-tbody";
 let bannerSortDrake = null;
 let isPersistingBannerOrder = false;
-
+let bannerRequestSeq = 0;
+let countingDownRequestSeq = 0;
+let isCreatingBanner = false;
+let isSavingCountingDown = false;
 
 window.addEventListener("DOMContentLoaded", function () {
   fetchAndRenderBanners();
+  fetchAndRenderCountingDown();
+  bindBannerActions();
+  bindCountingDownActions();
+});
 
-  fetch("/api/countingdown", {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.success) {
-        console.log("CountingDown ", data.data);
-        countingDown = data.data[0];
-        renderCountingDownTable(countingDown);
-      } else {
-        console.log(" CountingDown :", data.message);
-      }
-    })
-    .catch((error) => {
-      console.error(":", error);
-    });
+function applyBannerList(items, options) {
+  const config = options || {};
+  if (config.invalidatePending !== false) {
+    bannerRequestSeq += 1;
+  }
 
+  bannerList = Array.isArray(items) ? items : [];
+  renderBannerTable(bannerList);
+  toggleAddBannerButton(bannerList);
+  return bannerList;
+}
 
+function applyCountingDownData(item, options) {
+  const config = options || {};
+  if (config.invalidatePending !== false) {
+    countingDownRequestSeq += 1;
+  }
+
+  countingDown = item && typeof item === "object" ? item : {};
+  renderCountingDownTable(countingDown);
+  return countingDown;
+}
+
+function bindBannerActions() {
   document.addEventListener("click", function (e) {
+    const deleteTrigger = e.target.closest(".banner-delete-trash");
+    if (!deleteTrigger) {
+      return;
+    }
 
-    if (e.target.closest(".banner-delete-trash")) {
-      const target = e.target.closest(".banner-delete-trash");
-      const bannerId = target.getAttribute("data-banner-id");
-
-
-      const idContainer = document.getElementById("delete-banner-id");
-      if (idContainer) {
-        idContainer.innerHTML = bannerId;
-      }
+    const bannerId = deleteTrigger.getAttribute("data-banner-id");
+    const idContainer = document.getElementById("delete-banner-id");
+    if (idContainer) {
+      idContainer.innerHTML = bannerId;
     }
   });
 
-  document
-    .getElementById("confirm-delete-banner-btn")
-    .addEventListener("click", function () {
-      const id = parseInt(
-        document.getElementById("delete-banner-id").innerHTML.trim()
-      );
-
+  const confirmDeleteBtn = document.getElementById("confirm-delete-banner-btn");
+  if (confirmDeleteBtn) {
+    confirmDeleteBtn.addEventListener("click", function () {
+      const idNode = document.getElementById("delete-banner-id");
+      const id = Number.parseInt(idNode ? idNode.innerHTML.trim() : "", 10);
       deleteBanner(id);
     });
+  }
 
-  document.addEventListener("click", function (e) {
-    const target = e.target;
-    if (target && target.id === "add-banner-btn") {
+  const addBannerBtn = document.getElementById("add-banner-btn");
+  if (addBannerBtn) {
+    addBannerBtn.addEventListener("click", function () {
+      if (isCreatingBanner) {
+        return;
+      }
+
+      isCreatingBanner = true;
+      addBannerBtn.disabled = true;
+
       fetch("/api/banner/create", {
-    method: "POST",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(getAddBannerForm()),
       })
         .then((res) => res.json())
         .then((data) => {
-          if (data.success) {
-            console.log(" Banner ");
-            renderBannerTable(data.data);
-            toggleAddBannerButton(data.data);
+          if (!data || !data.success) {
+            throw new Error((data && data.message) || "Create banner failed");
+          }
 
+          applyBannerList(data.data || []);
 
-            const modal = bootstrap.Modal.getInstance(
-              document.getElementById("AddBannerModal")
-            );
-            if (modal) modal.hide();
-            clearAddBannerForm();
-          } else {
-            console.error(" : ", data.message);
+          const modal = bootstrap.Modal.getInstance(document.getElementById("AddBannerModal"));
+          if (modal) {
+            modal.hide();
+          }
+          clearAddBannerForm();
+        })
+        .catch((err) => {
+          console.error("Create banner failed:", err);
+        })
+        .finally(() => {
+          isCreatingBanner = false;
+          addBannerBtn.disabled = false;
+        });
+    });
+  }
+}
+
+function bindCountingDownActions() {
+  const tbody = document.getElementById("index-counting-down-tbody");
+  if (tbody && !tbody.dataset.countingdownBound) {
+    tbody.addEventListener("click", function (e) {
+      const editBtn = e.target.closest("#countingdown-precious-edit-btn");
+      if (!editBtn) {
+        return;
+      }
+
+      fillCountingDownModal(countingDown || {});
+    });
+    tbody.dataset.countingdownBound = "1";
+  }
+
+  const saveBtn = document.getElementById("save-countingdown-precious-btn");
+  if (saveBtn && !saveBtn.dataset.countingdownBound) {
+    saveBtn.addEventListener("click", function () {
+      if (isSavingCountingDown) {
+        return;
+      }
+
+      const updatedData = getCountingDownPreciousForm();
+      isSavingCountingDown = true;
+      saveBtn.disabled = true;
+
+      fetch("/api/countingdown/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(updatedData),
+      })
+        .then((response) => response.json())
+        .then((res) => {
+          if (!res || !res.success) {
+            throw new Error((res && res.message) || "Update counting down failed");
+          }
+          return fetchAndRenderCountingDown({ strict: true });
+        })
+        .then(() => {
+          const modal = bootstrap.Modal.getInstance(
+            document.getElementById("EditCountingDownModal")
+          );
+          if (modal) {
+            modal.hide();
           }
         })
         .catch((err) => {
-          console.error(" : ", err);
+          console.error("Update counting down failed:", err);
+        })
+        .finally(() => {
+          isSavingCountingDown = false;
+          saveBtn.disabled = false;
         });
-    }
-  });
-});
+    });
+    saveBtn.dataset.countingdownBound = "1";
+  }
+}
 
-function fetchAndRenderBanners() {
+function fetchAndRenderBanners(options) {
+  const config = options || {};
+  const strict = !!config.strict;
+  const requestSeq = ++bannerRequestSeq;
+
   return fetch("/api/banners", {
     method: "GET",
     headers: {
@@ -99,28 +179,78 @@ function fetchAndRenderBanners() {
   })
     .then((response) => response.json())
     .then((data) => {
-      if (data.success) {
-        bannerList = Array.isArray(data.data) ? data.data : [];
-        renderBannerTable(bannerList);
-        toggleAddBannerButton(bannerList);
-      } else {
-        console.log(" Banner :", data.message);
+      if (!data || !data.success) {
+        const message = (data && data.message) || "Failed to fetch banners";
+        console.error("Failed to fetch banners:", message);
+        if (strict) {
+          throw new Error(message);
+        }
+        return null;
       }
+
+      if (requestSeq !== bannerRequestSeq) {
+        return null;
+      }
+
+      return applyBannerList(data.data || [], { invalidatePending: false });
     })
     .catch((error) => {
-      console.error(":", error);
+      console.error("Failed to fetch banners:", error);
+      if (strict) {
+        throw error;
+      }
+      return null;
+    });
+}
+
+function fetchAndRenderCountingDown(options) {
+  const config = options || {};
+  const strict = !!config.strict;
+  const requestSeq = ++countingDownRequestSeq;
+
+  return fetch("/api/countingdown", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    cache: "no-store",
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (!data || !data.success) {
+        const message = (data && data.message) || "Failed to fetch counting down";
+        console.error("Failed to fetch counting down:", message);
+        if (strict) {
+          throw new Error(message);
+        }
+        return null;
+      }
+
+      if (requestSeq !== countingDownRequestSeq) {
+        return null;
+      }
+
+      const firstItem = Array.isArray(data.data) && data.data.length > 0 ? data.data[0] : {};
+      return applyCountingDownData(firstItem, { invalidatePending: false });
+    })
+    .catch((error) => {
+      console.error("Failed to fetch counting down:", error);
+      if (strict) {
+        throw error;
+      }
+      return null;
     });
 }
 
 function getAddBannerForm() {
-  const newBanner = {
+  return {
     title1: document.getElementById("add-banner-title-1").value.trim(),
     title2: document.getElementById("add-banner-title-2").value.trim(),
     subtitle: document.getElementById("add-banner-subtitle").value.trim(),
     url: document.getElementById("add-banner-url").value.trim(),
     picurl: document.getElementById("add-banner-picture-url").value.trim(),
   };
-  return newBanner;
 }
 
 function clearAddBannerForm() {
@@ -235,7 +365,9 @@ function saveBannerOrder() {
         return;
       }
 
-      bannerList = Array.isArray(data.data) ? data.data : bannerList;
+      if (Array.isArray(data.data)) {
+        applyBannerList(data.data || []);
+      }
     })
     .catch((error) => {
       console.error("Save banner order failed", error);
@@ -282,74 +414,35 @@ function initBannerDragAndDrop() {
 }
 
 function getCountingDownPreciousForm() {
-  const priceValue = parseFloat(
-    document.getElementById("edit-countingdown-price").value.trim()
-  );
+  const priceValue = parseFloat(document.getElementById("edit-countingdown-price").value.trim());
   const discountValue = parseFloat(
     document.getElementById("edit-countingdown-discount").value.trim()
   );
 
   let percentageValue = 0;
   if (priceValue && discountValue) {
-    percentageValue = -Math.round(
-      ((priceValue - discountValue) / priceValue) * 100
-    );
+    percentageValue = -Math.round(((priceValue - discountValue) / priceValue) * 100);
   }
-  const editCountingDownPreciousData = {
+
+  return {
     title: document.getElementById("edit-countingdown-title").value.trim(),
-    price: parseInt(
-      document.getElementById("edit-countingdown-price").value.trim()
-    ),
-    discount: parseInt(
-      document.getElementById("edit-countingdown-discount").value.trim()
-    ),
+    price: parseInt(document.getElementById("edit-countingdown-price").value.trim(), 10),
+    discount: parseInt(document.getElementById("edit-countingdown-discount").value.trim(), 10),
     percentage: `${percentageValue}%`,
-    rating: parseFloat(
-      document.getElementById("edit-countingdown-rating-select").value
-    ),
+    rating: parseFloat(document.getElementById("edit-countingdown-rating-select").value),
     ddl: document.getElementById("edit-countingdown-ddl").value.trim(),
     url: document.getElementById("edit-countingdown-precious-url").value.trim(),
-    picurl: document
-      .getElementById("edit-countingdown-precious-picture-url")
-      .value.trim(),
+    picurl: document.getElementById("edit-countingdown-precious-picture-url").value.trim(),
   };
-
-  console.log("", editCountingDownPreciousData);
-  return editCountingDownPreciousData;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 function renderCountingDownTable(data) {
   const tbody = document.getElementById("index-counting-down-tbody");
+  if (!tbody) {
+    return;
+  }
+
   const item = data || {};
-
-
   tbody.innerHTML = "";
 
   const pictureUrl = toDisplayText(item.picurl, "");
@@ -373,7 +466,6 @@ function renderCountingDownTable(data) {
     </a>`;
 
   const row = document.createElement("tr");
-
   row.innerHTML = `
     <td>
       ${imageCellHtml}
@@ -403,82 +495,22 @@ function renderCountingDownTable(data) {
   `;
 
   tbody.appendChild(row);
-
-
   initTooltipsIn(tbody);
-
-  document
-    .getElementById("countingdown-precious-edit-btn")
-    .addEventListener("click", function () {
-      fillCountingDownModal(countingDown);
-    });
-
-  document.addEventListener("click", function (e) {
-    const target = e.target;
-    if (target && target.id === "save-countingdown-precious-btn") {
-      const updatedData = getCountingDownPreciousForm();
-
-      fetch("/api/countingdown/update", {
-    method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(updatedData),
-      })
-        .then((response) => response.json())
-        .then((res) => {
-          if (res.success) {
-            console.log(" ");
-
-
-            fetch("/api/countingdown", {
-    method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              credentials: "include",
-            })
-              .then((res) => res.json())
-              .then((data) => {
-                if (data.success) {
-                  countingDown = data.data[0];
-                  renderCountingDownTable(countingDown);
-
-
-                  const modal = bootstrap.Modal.getInstance(
-                    document.getElementById("EditCountingDownModal")
-                  );
-                  if (modal) modal.hide();
-                } else {
-                  console.error(" :", data.message);
-                }
-              });
-          } else {
-            console.error(" :", res.message);
-          }
-        })
-        .catch((err) => {
-          console.error(" :", err);
-        });
-    }
-  });
 }
 
 function fillCountingDownModal(data) {
-
   document.getElementById("edit-countingdown-title").value = data.title || "";
   document.getElementById("edit-countingdown-price").value = data.price || "";
-  document.getElementById("edit-countingdown-discount").value =
-    data.discount || "";
+  document.getElementById("edit-countingdown-discount").value = data.discount || "";
+
   const parsedRating = Number(data.rating);
-  document.getElementById("edit-countingdown-rating-select").value =
-    Number.isFinite(parsedRating) ? parsedRating.toFixed(1) : "1.0";
+  document.getElementById("edit-countingdown-rating-select").value = Number.isFinite(parsedRating)
+    ? parsedRating.toFixed(1)
+    : "1.0";
+
   document.getElementById("edit-countingdown-ddl").value = data.ddl || "";
-  document.getElementById("edit-countingdown-precious-url").value =
-    data.url || "";
-  document.getElementById("edit-countingdown-precious-picture-url").value =
-    data.picurl || "";
+  document.getElementById("edit-countingdown-precious-url").value = data.url || "";
+  document.getElementById("edit-countingdown-precious-picture-url").value = data.picurl || "";
 }
 
 function renderBannerTable(data) {
@@ -487,9 +519,10 @@ function renderBannerTable(data) {
     return;
   }
 
+  const rows = Array.isArray(data) ? data : [];
   tableBody.innerHTML = "";
 
-  data.forEach((item) => {
+  rows.forEach((item) => {
     const pictureUrl = toDisplayText(item.picurl, "");
     const linkUrl = toDisplayText(item.url);
     const imageCellHtml = pictureUrl
@@ -539,10 +572,10 @@ function renderBannerTable(data) {
       <td class="text-muted">
         <a
           href="javascript:void(0);"
-          class="link-reset fs-20 p-1 banner-delete-trash" data-banner-id="${item.id}"
+          class="link-reset fs-20 p-1 banner-delete-trash"
+          data-banner-id="${toDisplayText(item.id, "")}"
           data-bs-toggle="modal"
-        data-bs-target="#banner-delete-warning-modal"
-          
+          data-bs-target="#banner-delete-warning-modal"
         >
           <i class="ti ti-trash"></i>
         </a>
@@ -552,7 +585,6 @@ function renderBannerTable(data) {
     tableBody.appendChild(row);
   });
 
-
   syncBannerEmptyRow();
   initTooltipsIn(tableBody);
   initBannerDragAndDrop();
@@ -560,9 +592,14 @@ function renderBannerTable(data) {
 
 function toggleAddBannerButton(data) {
   const addButton = document.getElementById("add-banner-modal-btn");
+  if (!addButton) {
+    return;
+  }
+
+  const list = Array.isArray(data) ? data : [];
   const maxBannerCount = 3;
 
-  if (data.length >= maxBannerCount) {
+  if (list.length >= maxBannerCount) {
     addButton.classList.add("disabled");
     addButton.setAttribute("disabled", "disabled");
   } else {
@@ -572,28 +609,30 @@ function toggleAddBannerButton(data) {
 }
 
 function deleteBanner(bannerId) {
+  if (!Number.isInteger(bannerId) || bannerId <= 0) {
+    return;
+  }
+
   fetch("/api/banner/delete", {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: "include",
     body: JSON.stringify({
       id: bannerId,
     }),
   })
     .then((response) => response.json())
     .then((data) => {
-      if (data.success) {
-        console.log("Banner ");
-
-        renderBannerTable(data.data);
-        toggleAddBannerButton(data.data);
-      } else {
-        console.log("Banner :", data.message);
+      if (!data || !data.success) {
+        console.error("Delete banner failed:", data && data.message);
+        return;
       }
+
+      applyBannerList(data.data || []);
     })
     .catch((error) => {
-      console.error(":", error);
+      console.error("Delete banner failed:", error);
     });
 }
-

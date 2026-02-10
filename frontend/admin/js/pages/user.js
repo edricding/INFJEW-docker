@@ -1,4 +1,5 @@
 let activeResetUserId = null;
+let usersRequestSeq = 0;
 
 window.addEventListener("DOMContentLoaded", function () {
   fetchUsers();
@@ -7,9 +8,12 @@ window.addEventListener("DOMContentLoaded", function () {
 });
 
 function fetchUsers() {
+  const requestSeq = ++usersRequestSeq;
+
   fetch("/api/users", {
     method: "GET",
     credentials: "include",
+    cache: "no-store",
   })
     .then((res) => res.json())
     .then((data) => {
@@ -17,6 +21,12 @@ function fetchUsers() {
         renderError((data && data.message) || "Failed to load users.");
         return;
       }
+
+      // Ignore stale responses so old requests cannot overwrite newer table state.
+      if (requestSeq !== usersRequestSeq) {
+        return;
+      }
+
       renderUsersTable(Array.isArray(data.data) ? data.data : []);
     })
     .catch((err) => {
