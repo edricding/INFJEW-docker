@@ -1,4 +1,5 @@
 # Verify Frontend
+https://verify.infjew.com/
 
 This folder contains the verify page used to search:
 - precious tag code
